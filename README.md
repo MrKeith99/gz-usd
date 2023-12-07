@@ -41,13 +41,13 @@ Here you have more detailed instructions about how to setup your environment.
 > [!NOTE]  
 > You can follow the [official instructions](https://gazebosim.org/docs/garden/install_ubuntu) as well.
 
-1. Install some necessary tools
+1. Install some necessary tools.
     ```bash
     $ sudo apt-get update
     $ sudo apt-get install lsb-release wget gnupg
     ```
 
-2. Install Gazebo Garden
+2. Install Gazebo Garden.
     ```bash
     $ sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
     $ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
@@ -63,12 +63,12 @@ Here you have more detailed instructions about how to setup your environment.
 > [!NOTE]  
 > You can follow the [official instructions](https://github.com/PixarAnimationStudios/OpenUSD/tree/v21.11#getting-and-building-the-code) as well.
 
-1. Clone the USD repository
+1. Clone the USD repository.
     ```bash
     $ git clone --depth 1 -b v21.11 https://github.com/PixarAnimationStudios/OpenUSD
     ```
 
-2. Install dependencies to compile OpenUSD
+2. Install dependencies to compile OpenUSD.
 
     ```bash
     $ sudo apt install -y python3-opengl cmake libglu1-mesa-dev freeglut3-dev mesa-common-dev
@@ -76,12 +76,14 @@ Here you have more detailed instructions about how to setup your environment.
     ```
 3. Use the build script to compile USD.
 
+    ```bash
+    $ python3 OpenUSD/build_scripts/build_usd.py --build-variant release --no-tests --no-examples --no-tutorials --no-docs --no-python -j$(($(grep -c "^processor" /proc/cpuinfo) - 1)) <install_dir>
+    or: $ python3 OpenUSD/build_scripts/build_usd.py <install_dir>
+    ```
+
 > [!TIP]  
 > In order to speed up compilation, it is recommended to disable unneeded components.
 
-    ```bash
-    $ python3 OpenUSD/build_scripts/build_usd.py --build-variant release --no-tests --no-examples --no-tutorials --no-docs --no-python -j$(($(grep -c "^processor" /proc/cpuinfo) - 1)) <install_dir>
-    ```
 > [!NOTE]  
 > If your system collapses during compilation, try reducing the number of cores in the `-j/--jobs` flag.
 
@@ -94,7 +96,7 @@ Here you have more detailed instructions about how to setup your environment.
     export PYTHONPATH=<install_dir>/lib/python${PYTHONPATH:+:${PYTHONPATH}}
     ```
 
-5. Reaload your envirment to reflec the changes.
+5. Reload your environment to reflect the changes.
 
     ```bash
     $ source ~/.bashrc
@@ -104,7 +106,7 @@ Here you have more detailed instructions about how to setup your environment.
 
 ## Setup
 
-Follow the steps below in order to build `gz-usd` by traditional cmake build.
+Follow the steps below in order to build `gz-usd` by the traditional cmake build.
 
 > [!NOTE]  
 > Be sure to build gz-usd on a terminal with the above environment variables exported.
@@ -134,11 +136,10 @@ Follow the steps below in order to build `gz-usd` by traditional cmake build.
     $ cmake ..
     ```
 
-    6. Start the compiler.
+6. Start the compiler.
     ```bash
     $ make
     ```
-
 
 You can also build `gz-usd`with [colcon]([https://colcon.readthedocs.io/en/released/index.html](https://colcon.readthedocs.io/en/released/user/installation.html#using-pip-on-any-platform)):
 
