@@ -32,7 +32,7 @@ namespace usd
       const std::string &_outputFilenameSdf,
       bool _useGazeboPlugins)
   {
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
     USD2SDF usd2sdf;
     sdf::Root root;
     errors = usd2sdf.Read(_inputFilenameUsd, _useGazeboPlugins, root);

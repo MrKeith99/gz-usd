@@ -27,12 +27,12 @@ inline namespace GZ_USD_VERSION_NAMESPACE {
 //
 namespace usd
 {
-  gz::usd::UsdErrors PolygonToTriangles(
+  UsdErrors PolygonToTriangles(
       const pxr::VtIntArray &_faceVertexIndices,
       const pxr::VtIntArray &_faceVertexCounts,
       std::vector<unsigned int> &_triangles)
   {
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
     // TODO(koon peng) Use more robust algorithms.
     // For reference, blender supports "ear-clipping", and "Beauty".
     // https://blender.stackexchange.com/questions/215553/what-algorithm-is-used-for-beauty-triangulation

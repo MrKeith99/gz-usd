@@ -20,11 +20,11 @@
 #include <map>
 #include <string>
 
-#include <ignition/common/Filesystem.hh>
-#include <ignition/common/Util.hh>
-#include <ignition/common/URI.hh>
+#include <gz/common/Filesystem.hh>
+#include <gz/common/Util.hh>
+#include <gz/common/URI.hh>
 
-#include <ignition/math/Color.hh>
+#include <gz/math/Color.hh>
 
 // TODO(ahcorde) this is to remove deprecated "warnings" in usd, these warnings
 // are reported using #pragma message so normal diagnostic flags cannot remove
@@ -56,14 +56,14 @@ namespace usd
   {
     if (!_path.empty() && !_fullPath.empty())
     {
-      auto fileName = ignition::common::basename(_path);
+      auto fileName = common::basename(_path);
       auto filePathIndex = _path.rfind(fileName);
       auto filePath = _path.substr(0, filePathIndex);
       if (!filePath.empty())
       {
-        ignition::common::createDirectories(filePath);
+        common::createDirectories(filePath);
       }
-      return ignition::common::copyFile(_fullPath, _path);
+      return common::copyFile(_fullPath, _path);
     }
     return false;
   }
@@ -74,10 +74,10 @@ namespace usd
   /// materials/textures/<filename with extension>
   std::string getMaterialCopyPath(const std::string &_uri)
   {
-    return ignition::common::joinPaths(
+    return common::joinPaths(
       "materials",
       "textures",
-      ignition::common::basename(_uri));
+      common::basename(_uri));
   }
 
   /// \brief Fill Material shader attributes and properties
@@ -91,10 +91,10 @@ namespace usd
   /// \param[in] _doc Documentation of the field
   /// \param[in] _colorSpace if the material is a texture, we can specify the
   /// color space of the image
-  /// \return gz::usd::UsdErrors, which is a list of UsdError objects.
+  /// \return UsdErrors, which is a list of UsdError objects.
   /// This list is empty if no errors occurred when creating the material input.
   template<typename T>
-  gz::usd::UsdErrors CreateMaterialInput(
+  UsdErrors CreateMaterialInput(
     const pxr::UsdPrim &_prim,
     const std::string &_name,
     const pxr::SdfValueTypeName &_vType,
@@ -105,12 +105,12 @@ namespace usd
     const std::string &_doc,
     const pxr::TfToken &_colorSpace = pxr::TfToken(""))
   {
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
     auto shader = pxr::UsdShadeShader(_prim);
     if (!shader)
     {
       errors.emplace_back(UsdError(
-        gz::usd::UsdErrorCode::INVALID_PRIM_PATH,
+        UsdErrorCode::INVALID_PRIM_PATH,
         "Unable to convert the prim to a UsdShadeShader"));
       return errors;
     }
@@ -153,10 +153,10 @@ namespace usd
     return errors;
   }
 
-  gz::usd::UsdErrors ParseSdfMaterial(const sdf::Material *_materialSdf,
+  UsdErrors ParseSdfMaterial(const sdf::Material *_materialSdf,
       pxr::UsdStageRefPtr &_stage, pxr::SdfPath &_materialPath)
   {
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
 
     const auto looksPath = pxr::SdfPath("/Looks");
     auto looksPrim = _stage->GetPrimAtPath(looksPath);
@@ -189,7 +189,7 @@ namespace usd
     if (!shaderPrim)
     {
       errors.emplace_back(UsdError(
-        gz::usd::UsdErrorCode::INVALID_PRIM_PATH,
+        UsdErrorCode::INVALID_PRIM_PATH,
         "Not able to cast the UsdShadeShader at path [" + shaderPath.GetString()
         + "] to a Prim"));
       return errors;
@@ -398,8 +398,8 @@ namespace usd
           std::string copyPath = getMaterialCopyPath(pbrWorkflow->AlbedoMap());
 
           std::string fullnameAlbedoMap =
-            ignition::common::findFile(
-              ignition::common::basename(pbrWorkflow->AlbedoMap()));
+            common::findFile(
+              common::basename(pbrWorkflow->AlbedoMap()));
 
           if (fullnameAlbedoMap.empty())
           {
@@ -437,8 +437,8 @@ namespace usd
             getMaterialCopyPath(pbrWorkflow->MetalnessMap());
 
           std::string fullnameMetallnessMap =
-            ignition::common::findFile(
-              ignition::common::basename(pbrWorkflow->MetalnessMap()));
+            common::findFile(
+              common::basename(pbrWorkflow->MetalnessMap()));
 
           if (fullnameMetallnessMap.empty())
           {
@@ -475,8 +475,8 @@ namespace usd
           std::string copyPath = getMaterialCopyPath(pbrWorkflow->NormalMap());
 
           std::string fullnameNormalMap =
-            ignition::common::findFile(
-              ignition::common::basename(pbrWorkflow->NormalMap()));
+            common::findFile(
+              common::basename(pbrWorkflow->NormalMap()));
 
           if (fullnameNormalMap.empty())
           {
@@ -514,8 +514,8 @@ namespace usd
             getMaterialCopyPath(pbrWorkflow->RoughnessMap());
 
           std::string fullnameRoughnessMap =
-            ignition::common::findFile(
-              ignition::common::basename(pbrWorkflow->RoughnessMap()));
+            common::findFile(
+              common::basename(pbrWorkflow->RoughnessMap()));
 
           if (fullnameRoughnessMap.empty())
           {

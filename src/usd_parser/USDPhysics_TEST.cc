@@ -52,7 +52,7 @@ TEST(USDPhysicsTest, AvailablePhysics)
 
   const double metersPerUnit = 1.0;
 
-  gz::usd::ParseUSDPhysicsScene(
+  usd::ParseUSDPhysicsScene(
     physicsScene, world, metersPerUnit);
   EXPECT_EQ(math::Vector3d(0, 0, -9.8), world.Gravity());
 }
@@ -72,7 +72,7 @@ TEST(USDPhysicsTest, UnavailablePhysics)
 
   const double metersPerUnit = 1.0;
 
-  gz::usd::ParseUSDPhysicsScene(
+  usd::ParseUSDPhysicsScene(
     physicsScene, world, metersPerUnit);
   EXPECT_EQ(math::Vector3d(0, 0, -9.8), world.Gravity());
 }

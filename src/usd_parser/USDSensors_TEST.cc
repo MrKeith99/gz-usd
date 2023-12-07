@@ -28,7 +28,7 @@
 #include <pxr/usd/usd/stage.h>
 #pragma pop_macro ("__DEPRECATED")
 
-#include <ignition/math/Pose3.hh>
+#include <gz/math/Pose3.hh>
 
 #include "test_config.h"
 #include "test_utils.hh"
@@ -50,14 +50,14 @@ TEST(USDJointTest, JointTest)
   const auto stage = pxr::UsdStage::Open(filename);
   ASSERT_TRUE(stage);
 
-  gz::usd::USDData usdData(filename);
+  usd::USDData usdData(filename);
   usdData.Init();
 
   const auto cameraPrim = stage->GetPrimAtPath(pxr::SdfPath(
     "/camera"));
   ASSERT_TRUE(cameraPrim);
 
-  sdf::Sensor sensorCamera = gz::usd::ParseSensors(
+  sdf::Sensor sensorCamera = usd::ParseSensors(
     cameraPrim, usdData);
 
   EXPECT_EQ(sdf::SensorType::CAMERA, sensorCamera.Type());
@@ -77,7 +77,7 @@ TEST(USDJointTest, JointTest)
     "/lidar"));
   ASSERT_TRUE(lidarPrim);
 
-  sdf::Sensor sensorLidar = gz::usd::ParseSensors(
+  sdf::Sensor sensorLidar = usd::ParseSensors(
     lidarPrim, usdData);
 
   EXPECT_EQ(sdf::SensorType::GPU_LIDAR, sensorLidar.Type());

@@ -18,8 +18,8 @@
 #include <string>
 #include "USDMaterial.hh"
 
-#include <ignition/common/Filesystem.hh>
-#include <ignition/common/Util.hh>
+#include <gz/common/Filesystem.hh>
+#include <gz/common/Util.hh>
 #include <pxr/usd/usdShade/input.h>
 #include <pxr/usd/usdShade/material.h>
 #include <pxr/usd/usdShade/shader.h>
@@ -39,21 +39,21 @@ namespace gz
   /// \param[inout] _dest The destination for the copy of _ori. If _dest
   /// represents a file that already exists, a unique numeric suffix in the
   /// form of _<number> will be appended to the end of the file name.
-  /// \return A list of gz::usd::UsdErrors. An empty list means no errors
+  /// \return A list of UsdErrors. An empty list means no errors
   ///  occurred when copying _ori to _dest
-  gz::usd::UsdErrors copyFile(const std::string &_ori, std::string &_dest)
+  UsdErrors copyFile(const std::string &_ori, std::string &_dest)
   {
-    gz::usd::UsdErrors errors;
-    if (ignition::common::exists(_ori))
+    UsdErrors errors;
+    if (common::exists(_ori))
     {
       // If the file exists then we append a number suffix to the destination
       // file
       // For example:
       // /bar/foo.extension
       // /bar/foo_X.extension
-      if (ignition::common::exists(_dest))
+      if (common::exists(_dest))
       {
-        const std::string parentPath = ignition::common::parentPath(_dest);
+        const std::string parentPath = common::parentPath(_dest);
         std::string::size_type fileExtensionIndex = _dest.rfind(".");
         if (fileExtensionIndex == std::string::npos)
         {
@@ -66,7 +66,7 @@ namespace gz
 
         const std::string fileExtension = _dest.substr(fileExtensionIndex);
         std::string fileNameWithoutExtension =
-          ignition::common::basename(_dest);
+          common::basename(_dest);
         size_t pos = fileNameWithoutExtension.find(fileExtension);
         if (pos != std::string::npos)
         {
@@ -74,9 +74,9 @@ namespace gz
           fileNameWithoutExtension.erase(pos, fileExtension.length());
         }
         int index = 0;
-        while (ignition::common::exists(_dest))
+        while (common::exists(_dest))
         {
-          _dest = ignition::common::joinPaths(
+          _dest = common::joinPaths(
             parentPath,
             fileNameWithoutExtension + "_" + std::to_string(index) +
             fileExtension);
@@ -84,10 +84,10 @@ namespace gz
         }
       }
 
-      std::string baseName = ignition::common::basename(_dest);
-      std::string pathDest = ignition::common::replaceAll(_dest, baseName, "");
-      ignition::common::createDirectories(pathDest);
-      if (!ignition::common::copyFile(_ori, _dest))
+      std::string baseName = common::basename(_dest);
+      std::string pathDest = common::replaceAll(_dest, baseName, "");
+      common::createDirectories(pathDest);
+      if (!common::copyFile(_ori, _dest))
       {
         errors.emplace_back(
             sdf::Error(sdf::ErrorCode::FILE_READ, "Unable to copy the file ["
@@ -118,10 +118,10 @@ namespace gz
   }
 
   /////////////////////////////////////////////////
-  gz::usd::UsdErrors ParseMaterial(
+  UsdErrors ParseMaterial(
     const pxr::UsdPrim &_prim, sdf::Material &_material)
   {
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
     // if the prim is a Geom then get the color values
     if (_prim.IsA<pxr::UsdGeomGprim>())
     {
@@ -185,10 +185,10 @@ namespace gz
               pxr::SdfAssetPath materialPath =
                 assetPath(pxr::TfToken("diffuse_texture"), variantShader);
               std::string fullAlbedoName =
-                ignition::common::findFile(ignition::common::basename(
+                common::findFile(common::basename(
                   materialPath.GetAssetPath()), false);
               std::string dest = materialPath.GetAssetPath();
-              gz::usd::UsdErrors errorCopy = copyFile(
+              UsdErrors errorCopy = copyFile(
                 fullAlbedoName, dest);
               if (!errorCopy.empty())
               {
@@ -209,7 +209,7 @@ namespace gz
               pxr::SdfAssetPath materialPath =
                 assetPath(pxr::TfToken("normalmap_texture"), variantShader);
               std::string fullNormalName =
-                ignition::common::findFile(ignition::common::basename(
+                common::findFile(common::basename(
                   materialPath.GetAssetPath()), false);
               std::string dest = materialPath.GetAssetPath();
               auto errorCopy = copyFile(fullNormalName, dest);
@@ -226,7 +226,7 @@ namespace gz
               pxr::SdfAssetPath materialPath = assetPath(
                   pxr::TfToken("reflectionroughness_texture"), variantShader);
               std::string fullRoughnessName =
-                ignition::common::findFile(ignition::common::basename(
+                common::findFile(common::basename(
                   materialPath.GetAssetPath()), false);
               std::string dest = materialPath.GetAssetPath();
               auto errorCopy = copyFile(fullRoughnessName, dest);
@@ -243,7 +243,7 @@ namespace gz
               pxr::SdfAssetPath materialPath = assetPath(
                   pxr::TfToken("metallic_texture"), variantShader);
               std::string fullMetalnessName =
-                ignition::common::findFile(ignition::common::basename(
+                common::findFile(common::basename(
                   materialPath.GetAssetPath()), false);
               std::string dest = materialPath.GetAssetPath();
               auto errorCopy = copyFile(fullMetalnessName, dest);

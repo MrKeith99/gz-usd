@@ -47,7 +47,7 @@ TEST(USDLinksTest, LinksNameMassAndDiagonalMoments)
   const auto stage = pxr::UsdStage::Open(filename);
   ASSERT_TRUE(stage);
 
-  gz::usd::USDData usdData(filename);
+  usd::USDData usdData(filename);
   usdData.Init();
 
   math::Vector3d scale(1, 1, 1);
@@ -84,7 +84,7 @@ TEST(USDLinksTest, LinksNameMassAndDiagonalMoments)
   ASSERT_TRUE(boxLink);
 
   std::optional<sdf::Link> linkSDF;
-  gz::usd::ParseUSDLinks(
+  usd::ParseUSDLinks(
     boxLink, "/box/box_link", linkSDF, usdData, scale);
 
   EXPECT_EQ(math::Vector3d(1, 0.1, 1), scale);
@@ -93,14 +93,14 @@ TEST(USDLinksTest, LinksNameMassAndDiagonalMoments)
     pxr::SdfPath("/box/box_link/box_visual/geometry"));
   ASSERT_TRUE(boxLinkGeometry);
 
-  gz::usd::ParseUSDLinks(
+  usd::ParseUSDLinks(
     boxLinkGeometry, "/box/box_link", linkSDF, usdData, scale);
 
   const auto boxLinkCollision = stage->GetPrimAtPath(
     pxr::SdfPath("/box/box_link/box_visual/collision"));
   ASSERT_TRUE(boxLinkCollision);
 
-  gz::usd::ParseUSDLinks(
+  usd::ParseUSDLinks(
     boxLinkCollision, "/box/box_link", linkSDF, usdData, scale);
 
   ASSERT_TRUE(linkSDF);
@@ -113,7 +113,7 @@ TEST(USDLinksTest, LinksNameMassAndDiagonalMoments)
   ASSERT_TRUE(cylinderLink);
 
   std::optional<sdf::Link> linkCylinderSDF;
-  gz::usd::ParseUSDLinks(
+  usd::ParseUSDLinks(
     cylinderLink, "/cylinder/cylinder_link",
     linkCylinderSDF, usdData, scale);
 
@@ -121,7 +121,7 @@ TEST(USDLinksTest, LinksNameMassAndDiagonalMoments)
     pxr::SdfPath("/cylinder/cylinder_link/cylinder_visual/geometry"));
   EXPECT_TRUE(cylinderLinkGeometry);
 
-  gz::usd::ParseUSDLinks(
+  usd::ParseUSDLinks(
     cylinderLinkGeometry, "/cylinder/cylinder_link",
     linkCylinderSDF, usdData, scale);
 
@@ -129,7 +129,7 @@ TEST(USDLinksTest, LinksNameMassAndDiagonalMoments)
     pxr::SdfPath("/cylinder/cylinder_link/cylinder_visual/collision"));
   EXPECT_TRUE(cylinderLinkCollision);
 
-  gz::usd::ParseUSDLinks(
+  usd::ParseUSDLinks(
     cylinderLinkCollision, "/cylinder/cylinder_link",
     linkCylinderSDF, usdData, scale);
 
@@ -142,14 +142,14 @@ TEST(USDLinksTest, LinksNameMassAndDiagonalMoments)
   ASSERT_TRUE(sphereLink);
 
   std::optional<sdf::Link> linkSphereSDF;
-  gz::usd::ParseUSDLinks(
+  usd::ParseUSDLinks(
     sphereLink, "/sphere/sphere_link", linkSphereSDF, usdData, scale);
 
   const auto sphereLinkGeometry = stage->GetPrimAtPath(
     pxr::SdfPath("/sphere/sphere_link/sphere_visual/geometry"));
   EXPECT_TRUE(sphereLinkGeometry);
 
-  gz::usd::ParseUSDLinks(
+  usd::ParseUSDLinks(
     sphereLinkGeometry, "/sphere/sphere_link",
     linkSphereSDF, usdData, scale);
 
@@ -157,7 +157,7 @@ TEST(USDLinksTest, LinksNameMassAndDiagonalMoments)
     pxr::SdfPath("/sphere/sphere_link/sphere_visual/collision"));
   EXPECT_TRUE(sphereLinkCollision);
 
-  gz::usd::ParseUSDLinks(
+  usd::ParseUSDLinks(
     sphereLinkCollision, "/sphere/sphere_link",
     linkSphereSDF, usdData, scale);
 
@@ -171,14 +171,14 @@ TEST(USDLinksTest, LinksNameMassAndDiagonalMoments)
   ASSERT_TRUE(capsuleLink);
 
   std::optional<sdf::Link> linkCapsuleSDF;
-  gz::usd::ParseUSDLinks(
+  usd::ParseUSDLinks(
     capsuleLink, "/capsule/capsule_link", linkCapsuleSDF, usdData, scale);
 
   const auto capsuleLinkCollision = stage->GetPrimAtPath(
     pxr::SdfPath("/capsule/capsule_link/capsule_visual/collision"));
   EXPECT_TRUE(capsuleLinkCollision);
 
-  gz::usd::ParseUSDLinks(
+  usd::ParseUSDLinks(
     capsuleLinkCollision, "/capsule/capsule_link",
     linkCapsuleSDF, usdData, scale);
 
@@ -191,7 +191,7 @@ TEST(USDLinksTest, LinksNameMassAndDiagonalMoments)
   ASSERT_TRUE(ellipsoidLink);
 
   std::optional<sdf::Link> linkEllipsoidSDF;
-  gz::usd::ParseUSDLinks(
+  usd::ParseUSDLinks(
     ellipsoidLink, "/ellipsoid/ellipsoid_link",
     linkEllipsoidSDF, usdData, scale);
 
@@ -199,7 +199,7 @@ TEST(USDLinksTest, LinksNameMassAndDiagonalMoments)
     pxr::SdfPath("/ellipsoid/ellipsoid_link/ellipsoid_visual/collision"));
   EXPECT_TRUE(ellipsoidLinkCollision);
 
-  gz::usd::ParseUSDLinks(
+  usd::ParseUSDLinks(
     ellipsoidLinkCollision, "/ellipsoid/ellipsoid_link",
     linkEllipsoidSDF, usdData, scale);
 

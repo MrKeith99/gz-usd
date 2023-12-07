@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/math/Pose3.hh>
+#include <gz/math/Pose3.hh>
 
 // TODO(adlarkin) this is to remove deprecated "warnings" in usd, these warnings
 // are reported using #pragma message so normal diagnostic flags cannot remove
@@ -61,11 +61,11 @@ TEST(UsdUtils, PoseWrtParent)
   ASSERT_NE(nullptr, linkL3);
 
   math::Pose3d pose;
-  auto errors = gz::usd::PoseWrtParent(*linkL2, pose);
+  auto errors = usd::PoseWrtParent(*linkL2, pose);
   EXPECT_TRUE(errors.empty());
   EXPECT_EQ(math::Pose3d(2, 0, 0, 0, 0, 0), pose);
 
-  errors = gz::usd::PoseWrtParent(*linkL3, pose);
+  errors = usd::PoseWrtParent(*linkL3, pose);
   EXPECT_TRUE(errors.empty());
   EXPECT_EQ(math::Pose3d(1, 0, -3, 0, linkL1->RawPose().Pitch(), 0),
       pose);
@@ -87,10 +87,10 @@ TEST(UsdUtils, SetPose)
   ASSERT_TRUE(prim);
 
   const math::Pose3d pose(1, 2, 3, 0, 0, 0);
-  auto errors = gz::usd::SetPose(pose, stage, primPath);
+  auto errors = usd::SetPose(pose, stage, primPath);
   EXPECT_TRUE(errors.empty());
 
-  gz::usd::testing::CheckPrimPose(prim, pose);
+  usd::testing::CheckPrimPose(prim, pose);
 }
 
 //////////////////////////////////////////////////
@@ -107,32 +107,32 @@ TEST(UsdUtils, IsPlane)
   ASSERT_EQ(1u, world->ModelCount());
   const auto model = world->ModelByIndex(0u);
   ASSERT_NE(nullptr, model);
-  EXPECT_TRUE(gz::usd::IsPlane(*model));
+  EXPECT_TRUE(usd::IsPlane(*model));
 
   // make the model non-static to verify it's no longer considered a plane
   auto mutableModel = const_cast<sdf::Model *>(model);
   ASSERT_NE(nullptr, mutableModel);
   mutableModel->SetStatic(false);
-  EXPECT_FALSE(gz::usd::IsPlane(*mutableModel));
+  EXPECT_FALSE(usd::IsPlane(*mutableModel));
 }
 
 //////////////////////////////////////////////////
 TEST(UsdUtils, validPath)
 {
   const std::string alreadyValid = "/valid/path";
-  EXPECT_EQ(alreadyValid, gz::usd::validPath(alreadyValid));
+  EXPECT_EQ(alreadyValid, usd::validPath(alreadyValid));
 
-  EXPECT_EQ("", gz::usd::validPath(""));
+  EXPECT_EQ("", usd::validPath(""));
 
   EXPECT_EQ("_0/start/with/digit",
-            gz::usd::validPath("0/start/with/digit"));
+            usd::validPath("0/start/with/digit"));
 
-  EXPECT_EQ("/hasSpaces", gz::usd::validPath("/has Spaces"));
+  EXPECT_EQ("/hasSpaces", usd::validPath("/has Spaces"));
 
-  EXPECT_EQ("/has_period", gz::usd::validPath("/has.period"));
+  EXPECT_EQ("/has_period", usd::validPath("/has.period"));
 
-  EXPECT_EQ("/has_dash", gz::usd::validPath("/has-dash"));
+  EXPECT_EQ("/has_dash", usd::validPath("/has-dash"));
 
   EXPECT_EQ("_5/has_period/hasSpace/has_dash",
-      gz::usd::validPath("5/has.period/has Space/has-dash"));
+      usd::validPath("5/has.period/has Space/has-dash"));
 }

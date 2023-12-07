@@ -67,7 +67,7 @@ TEST_F(UsdStageFixture, World)
   auto world = root.WorldByIndex(0u);
 
   const auto worldPath = std::string("/" + world->Name());
-  auto usdErrors = gz::usd::ParseSdfWorld(*world, stage, worldPath);
+  auto usdErrors = usd::ParseSdfWorld(*world, stage, worldPath);
   EXPECT_TRUE(usdErrors.empty());
 
   // check top-level stage information

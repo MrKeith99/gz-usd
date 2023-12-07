@@ -20,8 +20,8 @@
 #include <string>
 #include <unordered_map>
 
-#include <ignition/math/Pose3.hh>
-#include <ignition/math/Vector3.hh>
+#include <gz/math/Pose3.hh>
+#include <gz/math/Vector3.hh>
 
 // TODO(ahcorde) this is to remove deprecated "warnings" in usd, these warnings
 // are reported using #pragma message so normal diagnostic flags cannot remove
@@ -48,11 +48,11 @@ inline namespace GZ_USD_VERSION_NAMESPACE {
 //
 namespace usd
 {
-  gz::usd::UsdErrors ParseSdfModel(
+  UsdErrors ParseSdfModel(
     const sdf::Model &_model, pxr::UsdStageRefPtr &_stage,
     const std::string &_path, const pxr::SdfPath &_worldPath)
   {
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
 
     if (_model.ModelCount())
     {
@@ -122,15 +122,15 @@ namespace usd
     {
       const auto link = *(_model.LinkByIndex(i));
       auto linkPath = std::string(_path + "/" + link.Name());
-      linkPath = gz::usd::validPath(linkPath);
+      linkPath = validPath(linkPath);
       sdfLinkToUSDPath[link.Name()] = pxr::SdfPath(linkPath);
-      gz::usd::UsdErrors linkErrors = ParseSdfLink(
+      UsdErrors linkErrors = ParseSdfLink(
         link, _stage, linkPath, !_model.Static());
       if (!linkErrors.empty())
       {
         errors.push_back(
           UsdError(
-            gz::usd::UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
+            UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
             "Error parsing link [" + link.Name() + "]"));
         errors.insert(errors.end(), linkErrors.begin(), linkErrors.end());
         return errors;
@@ -142,7 +142,7 @@ namespace usd
     if (!modelPrim)
     {
       errors.push_back(UsdError(
-            gz::usd::UsdErrorCode::INVALID_PRIM_PATH,
+            UsdErrorCode::INVALID_PRIM_PATH,
             "Internal error: unable to find prim at path [" + _path
             + "], but a prim should exist at this path."));
       return errors;
@@ -157,7 +157,7 @@ namespace usd
       if (!jointErrors.empty())
       {
         errors.push_back(UsdError(
-              gz::usd::UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
+              UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
               "Error parsing joint [" + joint.Name() + "]."));
         errors.insert(errors.end(), jointErrors.begin(), jointErrors.end());
         return errors;
@@ -168,7 +168,7 @@ namespace usd
         if (!pxr::UsdPhysicsArticulationRootAPI::Apply(modelPrim))
         {
           errors.push_back(UsdError(
-                gz::usd::UsdErrorCode::FAILED_PRIM_API_APPLY,
+                UsdErrorCode::FAILED_PRIM_API_APPLY,
                 "Unable to mark Xform at path [" + _path +
                 "] as a pxr::UsdPhysicsArticulationRootAPI. "
                 "Some features might not work."));
@@ -185,7 +185,7 @@ namespace usd
       if (!pxr::UsdPhysicsRigidBodyAPI::Apply(modelPrim))
       {
         errors.push_back(UsdError(
-          gz::usd::UsdErrorCode::FAILED_PRIM_API_APPLY,
+          UsdErrorCode::FAILED_PRIM_API_APPLY,
           "Internal error: unable to mark model at path [" +
           modelPrim.GetPath().GetString() + "] as a rigid body."));
         return errors;

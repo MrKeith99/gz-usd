@@ -19,7 +19,7 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/common/Util.hh>
+#include <gz/common/Util.hh>
 
 // TODO(ahcorde) this is to remove deprecated "warnings" in usd, these warnings
 // are reported using #pragma message so normal diagnostic flags cannot remove
@@ -94,7 +94,7 @@ TEST_F(UsdStageFixture, Ellipsoid)
   const auto world = root.WorldByIndex(0u);
 
   const auto worldPath = std::string("/" + world->Name());
-  const auto usdErrors = gz::usd::ParseSdfWorld(*world, stage, worldPath);
+  const auto usdErrors = usd::ParseSdfWorld(*world, stage, worldPath);
   EXPECT_TRUE(usdErrors.empty());
 
   const auto usdSphere = pxr::UsdGeomSphere::Define(
@@ -132,9 +132,9 @@ TEST_F(UsdStageFixture, Ellipsoid)
 /////////////////////////////////////////////////
 TEST_F(UsdStageFixture, Geometry)
 {
-  sdf::setFindCallback(gz::usd::testing::findFileCb);
-  ignition::common::addFindFileURICallback(
-    std::bind(&gz::usd::testing::FindResourceUri, std::placeholders::_1));
+  sdf::setFindCallback(usd::testing::findFileCb);
+  common::addFindFileURICallback(
+    std::bind(&usd::testing::FindResourceUri, std::placeholders::_1));
 
   const auto path = gz::testing::TestFile("sdf", "basic_shapes.sdf");
   sdf::Root root;
@@ -144,7 +144,7 @@ TEST_F(UsdStageFixture, Geometry)
   const auto world = root.WorldByIndex(0u);
 
   const auto worldPath = std::string("/" + world->Name());
-  const auto usdErrors = gz::usd::ParseSdfWorld(*world, stage, worldPath);
+  const auto usdErrors = usd::ParseSdfWorld(*world, stage, worldPath);
   EXPECT_TRUE(usdErrors.empty());
 
   const auto worldPrim = this->stage->GetPrimAtPath(pxr::SdfPath(worldPath));
@@ -181,7 +181,7 @@ TEST_F(UsdStageFixture, Geometry)
   ASSERT_TRUE(scaleAttr);
   scaleAttr.Get(&scale);
   EXPECT_EQ(pxr::GfVec3f(2, 4, 0.25), scale);
-  gz::usd::testing::HasScaleXFormOp(groundPlaneGeometry);
+  usd::testing::HasScaleXFormOp(groundPlaneGeometry);
   usdGroundPlane.GetExtentAttr().Get(&extent);
   this->CheckExtent(extent, pxr::GfVec3f(-0.5), pxr::GfVec3f(0.5));
   extent.clear();
@@ -208,7 +208,7 @@ TEST_F(UsdStageFixture, Geometry)
   ASSERT_TRUE(scaleAttr);
   scaleAttr.Get(&scale);
   EXPECT_EQ(pxr::GfVec3f(1, 2, 3), scale);
-  gz::usd::testing::HasScaleXFormOp(boxGeometry);
+  usd::testing::HasScaleXFormOp(boxGeometry);
   usdCube.GetExtentAttr().Get(&extent);
   this->CheckExtent(extent, pxr::GfVec3f(-0.5), pxr::GfVec3f(0.5));
   extent.clear();
@@ -300,7 +300,7 @@ TEST_F(UsdStageFixture, Geometry)
   ASSERT_TRUE(scaleAttr);
   scaleAttr.Get(&scale);
   EXPECT_EQ(pxr::GfVec3f(1.2, 2.3, 3.4), scale);
-  gz::usd::testing::HasScaleXFormOp(meshGeometry);
+  usd::testing::HasScaleXFormOp(meshGeometry);
   const auto usdMesh = pxr::UsdGeomMesh(meshGeometry);
   ASSERT_TRUE(usdMesh);
   usdMesh.GetExtentAttr().Get(&extent);

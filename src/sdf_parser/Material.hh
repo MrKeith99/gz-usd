@@ -45,10 +45,10 @@ namespace gz
     /// \param[in] _stage The stage that should contain the USD representation
     /// of _material.
     /// \param[out] _materialPath USD Material path
-    /// \return gz::usd::UsdErrors, which is a list of UsdError objects.
+    /// \return UsdErrors, which is a list of UsdError objects.
     /// This list is empty if no errors occurred when parsing _materialSdf its
     /// USD representation
-    gz::usd::UsdErrors ParseSdfMaterial(
+    UsdErrors ParseSdfMaterial(
         const sdf::Material *_materialSdf,
         pxr::UsdStageRefPtr &_stage,
         pxr::SdfPath &_materialPath);

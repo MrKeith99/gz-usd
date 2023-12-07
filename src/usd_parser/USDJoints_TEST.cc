@@ -28,7 +28,7 @@
 #include <pxr/usd/usd/stage.h>
 #pragma pop_macro ("__DEPRECATED")
 
-#include <ignition/math/Pose3.hh>
+#include <gz/math/Pose3.hh>
 
 #include "test_config.h"
 #include "test_utils.hh"
@@ -49,7 +49,7 @@ TEST(USDJointTest, JointTest)
   const auto stage = pxr::UsdStage::Open(filename);
   ASSERT_TRUE(stage);
 
-  gz::usd::USDData usdData(filename);
+  usd::USDData usdData(filename);
   usdData.Init();
 
   const auto upperJoint = stage->GetPrimAtPath(pxr::SdfPath(
@@ -57,7 +57,7 @@ TEST(USDJointTest, JointTest)
   ASSERT_TRUE(upperJoint);
 
   sdf::Joint joint1;
-  auto errors = gz::usd::ParseJoints(
+  auto errors = usd::ParseJoints(
     upperJoint, usdData, joint1);
 
   EXPECT_EQ(0u, errors.size());
@@ -77,7 +77,7 @@ TEST(USDJointTest, JointTest)
   ASSERT_TRUE(lowerJoint);
 
   sdf::Joint joint2;
-  errors = gz::usd::ParseJoints(
+  errors = usd::ParseJoints(
     lowerJoint, usdData, joint2);
 
   EXPECT_EQ(0u, errors.size());

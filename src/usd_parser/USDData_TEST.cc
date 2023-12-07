@@ -17,10 +17,10 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/common/Filesystem.hh>
-#include <ignition/common/Util.hh>
+#include <gz/common/Filesystem.hh>
+#include <gz/common/Util.hh>
 
-#include <ignition/utils/ExtraTestMacros.hh>
+#include <gz/utils/ExtraTestMacros.hh>
 
 #include <gz/usd/usd_parser/USDData.hh>
 #include <gz/usd/UsdError.hh>
@@ -37,25 +37,25 @@ using namespace gz;
 TEST(USDData, Constructor)
 {
   // Open a invalid USD file
-  gz::usd::USDData data(gz::testing::TestFile("usd", "invalid_name"));
-  gz::usd::UsdErrors errors = data.Init();
+  usd::USDData data(gz::testing::TestFile("usd", "invalid_name"));
+  usd::UsdErrors errors = data.Init();
   EXPECT_EQ(1u, errors.size());
 
   // Add test/usd directory to find some resources
-  auto systemPaths = ignition::common::systemPaths();
+  auto systemPaths = common::systemPaths();
   systemPaths->AddFilePaths(gz::testing::TestFile("usd"));
 
   {
     gz::testing::ScopeExit removeCopiedMaterials(
         []
         {
-          ignition::common::removeAll(
-            ignition::common::joinPaths(ignition::common::cwd(), "materials"));
+          common::removeAll(
+            common::joinPaths(common::cwd(), "materials"));
         });
 
     // Open a valid USD file
     std::string filename = gz::testing::TestFile("usd", "upAxisZ.usda");
-    gz::usd::USDData usdData(filename);
+    usd::USDData usdData(filename);
     EXPECT_EQ(0u, usdData.Init().size());
     EXPECT_EQ(0u, usdData.ParseMaterials().size());
 

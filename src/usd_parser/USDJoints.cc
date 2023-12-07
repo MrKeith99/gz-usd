@@ -30,7 +30,7 @@
 #include <pxr/usd/usdPhysics/revoluteJoint.h>
 #pragma pop_macro ("__DEPRECATED")
 
-#include <ignition/common/Util.hh>
+#include <gz/common/Util.hh>
 
 #include "gz/usd/UsdError.hh"
 #include "gz/usd/usd_parser/USDData.hh"
@@ -44,12 +44,12 @@ namespace gz
   //
   namespace usd
   {
-    gz::usd::UsdErrors ParseJoints(
+    UsdErrors ParseJoints(
       const pxr::UsdPrim &_prim,
       const USDData &_usdData,
       sdf::Joint &_joint)
     {
-      gz::usd::UsdErrors errors;
+      UsdErrors errors;
 
       std::pair<std::string, std::shared_ptr<USDStage>> usdData =
         _usdData.FindStage(_prim.GetPath().GetName());
@@ -66,19 +66,19 @@ namespace gz
 
       if (body1.size() > 0)
       {
-        _joint.SetChildName(ignition::common::basename(
+        _joint.SetChildName(common::basename(
           body1[0].GetString()));
       }
       else if (body0.size() > 0)
       {
         _joint.SetParentName("world");
-        _joint.SetChildName(ignition::common::basename(
+        _joint.SetChildName(common::basename(
           body0[0].GetString()));
       }
 
       if (body0.size() > 0 && _joint.ParentName().empty())
       {
-        _joint.SetParentName(ignition::common::basename(
+        _joint.SetParentName(common::basename(
           body0[0].GetString()));
       }
       else
@@ -214,7 +214,7 @@ namespace gz
         if (!errorsAxis.empty())
         {
           errors.emplace_back(UsdError(
-            gz::usd::UsdErrorCode::USD_TO_GZ_USD_PARSING_ERROR,
+            UsdErrorCode::USD_TO_GZ_USD_PARSING_ERROR,
               "Errors encountered when setting xyz of prismatic "
               "joint axis: [" + std::string(_prim.GetName()) + "]"));
           for (const auto & error : errorsAxis)
@@ -244,7 +244,7 @@ namespace gz
         if (!errorsAxis.empty())
         {
           errors.emplace_back(UsdError(
-            gz::usd::UsdErrorCode::USD_TO_GZ_USD_PARSING_ERROR,
+            UsdErrorCode::USD_TO_GZ_USD_PARSING_ERROR,
               "Errors encountered when setting xyz of revolute "
               "joint axis: [" + std::string(_prim.GetName()) + "]"));
           for (const auto & error : errorsAxis)
@@ -270,7 +270,7 @@ namespace gz
       else
       {
         errors.emplace_back(UsdError(
-              gz::usd::UsdErrorCode::USD_TO_GZ_USD_PARSING_ERROR,
+              UsdErrorCode::USD_TO_GZ_USD_PARSING_ERROR,
               "Unable to create a SDF joint from USD prim [" +
               std::string(_prim.GetName()) +
               "] because the prim is not a USD joint."));

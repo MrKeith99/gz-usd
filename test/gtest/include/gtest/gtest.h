@@ -2083,7 +2083,7 @@ class TestWithParam : public Test, public WithParamInterface<T> {
 // These predicate format functions work on floating-point values, and
 // can be used in {ASSERT|EXPECT}_PRED_FORMAT2*(), e.g.
 //
-//   EXPECT_PRED_FORMAT2(testing::DoubleLE, Foo(), 5.0);
+//   EXPECT_PRED_FORMAT2(gz::testing::DoubleLE, Foo(), 5.0);
 
 // Asserts that val1 is less than, or almost equal to, val2.  Fails
 // otherwise.  In particular, it fails if either val1 or val2 is NaN.

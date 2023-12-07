@@ -39,14 +39,14 @@
 #include <pxr/usd/usdShade/materialBindingAPI.h>
 #pragma pop_macro ("__DEPRECATED")
 
-#include <ignition/common/ColladaExporter.hh>
-#include <ignition/common/Filesystem.hh>
-#include <ignition/common/Material.hh>
-#include <ignition/common/Mesh.hh>
-#include <ignition/common/SubMesh.hh>
-#include <ignition/common/Util.hh>
+#include <gz/common/ColladaExporter.hh>
+#include <gz/common/Filesystem.hh>
+#include <gz/common/Material.hh>
+#include <gz/common/Mesh.hh>
+#include <gz/common/SubMesh.hh>
+#include <gz/common/Util.hh>
 
-#include <ignition/math/Inertial.hh>
+#include <gz/math/Inertial.hh>
 
 #include "sdf/Box.hh"
 #include "sdf/Collision.hh"
@@ -155,14 +155,14 @@ void GetInertial(
 std::string directoryFromUSDPath(const std::string &_primPath)
 {
   std::vector<std::string> tokensChild =
-    ignition::common::split(_primPath, "/");
+    common::split(_primPath, "/");
   std::string directoryMesh;
   if (tokensChild.size() > 1)
   {
     directoryMesh = tokensChild[0];
     for (unsigned int i = 1; i < tokensChild.size() - 1; ++i)
     {
-        directoryMesh = ignition::common::joinPaths(
+        directoryMesh = common::joinPaths(
           directoryMesh, tokensChild[i+1]);
     }
   }
@@ -187,7 +187,7 @@ std::string ParseMaterialName(const pxr::UsdPrim &_prim)
   for (const auto & p : paths)
   {
     std::vector<std::string> tokensMaterial =
-      ignition::common::split(pxr::TfStringify(p), "/");
+      common::split(pxr::TfStringify(p), "/");
 
     if(tokensMaterial.size() > 0)
     {
@@ -208,7 +208,7 @@ std::string ParseMaterialName(const pxr::UsdPrim &_prim)
 /// \return Number of mesh subsets
 int ParseMeshSubGeom(const pxr::UsdPrim &_prim,
   sdf::Link *_link,
-  ignition::common::SubMesh &_subMesh,
+  common::SubMesh &_subMesh,
   sdf::Mesh &_meshGeom,
   math::Vector3d &_scale,
   const USDData &_usdData)
@@ -227,18 +227,18 @@ int ParseMeshSubGeom(const pxr::UsdPrim &_prim,
         visSubset.SetMaterial(it->second);
       }
 
-      ignition::common::Mesh meshSubset;
+      common::Mesh meshSubset;
 
       numSubMeshes++;
 
-      ignition::common::SubMesh subMeshSubset;
-      subMeshSubset.SetPrimitiveType(ignition::common::SubMesh::TRISTRIPS);
+      common::SubMesh subMeshSubset;
+      subMeshSubset.SetPrimitiveType(common::SubMesh::TRISTRIPS);
       subMeshSubset.SetName("subgeommesh_" + std::to_string(numSubMeshes));
 
       if (it != _usdData.Materials().end())
       {
-        std::shared_ptr<ignition::common::Material> matCommon =
-          std::make_shared<ignition::common::Material>();
+        std::shared_ptr<gz::common::Material> matCommon =
+          std::make_shared<gz::common::Material>();
         convert(it->second, *matCommon.get());
         meshSubset.AddMaterial(matCommon);
         subMeshSubset.SetMaterialIndex(meshSubset.MaterialCount() - 1);
@@ -275,13 +275,13 @@ int ParseMeshSubGeom(const pxr::UsdPrim &_prim,
       std::string directoryMesh = directoryFromUSDPath(childPathName) +
         childPathName;
 
-      if (ignition::common::createDirectories(directoryMesh))
+      if (common::createDirectories(directoryMesh))
       {
-        directoryMesh = ignition::common::joinPaths(directoryMesh,
-          ignition::common::basename(directoryMesh));
+        directoryMesh = common::joinPaths(directoryMesh,
+          common::basename(directoryMesh));
 
         // Export with extension
-        ignition::common::ColladaExporter exporter;
+        common::ColladaExporter exporter;
         exporter.Export(&meshSubset, directoryMesh, false);
       }
       _meshGeom.SetFilePath(directoryMesh + ".dae");
@@ -317,9 +317,9 @@ int ParseMeshSubGeom(const pxr::UsdPrim &_prim,
 /// \param[in] _scale scale mesh
 /// \param[in] _usdData metadata of the USD file
 /// \param[out] _pose The pose of the parsed mesh
-/// \return gz::usd::UsdErrors, which is a list of UsdError objects.
+/// \return UsdErrors, which is a list of UsdError objects.
 ///  An empty list means that no errors occurred when parsing the USD mesh
-gz::usd::UsdErrors ParseMesh(
+UsdErrors ParseMesh(
   const pxr::UsdPrim &_prim,
   sdf::Link *_link,
   sdf::Visual &_vis,
@@ -328,16 +328,16 @@ gz::usd::UsdErrors ParseMesh(
   const USDData &_usdData,
   math::Pose3d &_pose)
 {
-  gz::usd::UsdErrors errors;
+  UsdErrors errors;
 
   const std::pair<std::string, std::shared_ptr<USDStage>> data =
     _usdData.FindStage(_prim.GetPath().GetName());
 
   double metersPerUnit = data.second->MetersPerUnit();
 
-  ignition::common::Mesh mesh;
-  ignition::common::SubMesh subMesh;
-  subMesh.SetPrimitiveType(ignition::common::SubMesh::TRISTRIPS);
+  common::Mesh mesh;
+  common::SubMesh subMesh;
+  subMesh.SetPrimitiveType(common::SubMesh::TRISTRIPS);
   pxr::VtIntArray faceVertexIndices;
   pxr::VtIntArray faceVertexCounts;
   pxr::VtArray<pxr::GfVec3f> normals;
@@ -418,8 +418,8 @@ gz::usd::UsdErrors ParseMesh(
   std::string directoryMesh = directoryFromUSDPath(primName) + primName;
 
   meshGeom.SetFilePath(
-    ignition::common::joinPaths(
-      directoryMesh, ignition::common::basename(directoryMesh)) + ".dae");
+    common::joinPaths(
+      directoryMesh, common::basename(directoryMesh)) + ".dae");
 
   meshGeom.SetUri(meshGeom.FilePath());
 
@@ -435,8 +435,8 @@ gz::usd::UsdErrors ParseMesh(
     if (it != _usdData.Materials().end())
     {
       _vis.SetMaterial(it->second);
-      std::shared_ptr<ignition::common::Material> matCommon =
-        std::make_shared<ignition::common::Material>();
+      std::shared_ptr<gz::common::Material> matCommon =
+        std::make_shared<gz::common::Material>();
       convert(it->second, *matCommon.get());
       mesh.AddMaterial(matCommon);
       subMesh.SetMaterialIndex(mesh.MaterialCount() - 1);
@@ -451,12 +451,12 @@ gz::usd::UsdErrors ParseMesh(
 
     mesh.AddSubMesh(subMesh);
 
-    if (ignition::common::createDirectories(directoryMesh))
+    if (common::createDirectories(directoryMesh))
     {
-      directoryMesh = ignition::common::joinPaths(
-        directoryMesh, ignition::common::basename(directoryMesh));
+      directoryMesh = common::joinPaths(
+        directoryMesh, common::basename(directoryMesh));
       // Export with extension
-      ignition::common::ColladaExporter exporter;
+      common::ColladaExporter exporter;
       exporter.Export(&mesh, directoryMesh, false);
     }
   }
@@ -540,14 +540,14 @@ void ParseCylinder(
 }
 
 //////////////////////////////////////////////////
-gz::usd::UsdErrors ParseUSDLinks(
+UsdErrors ParseUSDLinks(
   const pxr::UsdPrim &_prim,
   const std::string &_nameLink,
   std::optional<sdf::Link> &_link,
   const USDData &_usdData,
   math::Vector3d &_scale)
 {
-  gz::usd::UsdErrors errors;
+  UsdErrors errors;
   const std::string primNameStr = _prim.GetPath().GetName();
   const std::string primPathStr = pxr::TfStringify(_prim.GetPath());
   const std::string primType = _prim.GetPrimTypeInfo().GetTypeName().GetText();
@@ -559,7 +559,7 @@ gz::usd::UsdErrors ParseUSDLinks(
   if (!_link)
   {
     _link = sdf::Link();
-    _link->SetName(ignition::common::basename(_nameLink));
+    _link->SetName(common::basename(_nameLink));
 
     // USD define visual inside other visuals or links
     // This loop allow to find the link for a specific visual
@@ -605,7 +605,7 @@ gz::usd::UsdErrors ParseUSDLinks(
   // If the schema is a rigid body use this name instead.
   if (_prim.HasAPI<pxr::UsdPhysicsRigidBodyAPI>())
   {
-    _link->SetName(ignition::common::basename(primPathStr));
+    _link->SetName(common::basename(primPathStr));
   }
 
   math::Inertiald noneInertial = {{1.0,
@@ -679,7 +679,7 @@ gz::usd::UsdErrors ParseUSDLinks(
         if (!errors.empty())
         {
           errors.emplace_back(UsdError(
-          gz::usd::UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
+          UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
             "Error parsing mesh"));
           return errors;
         }
@@ -747,7 +747,7 @@ gz::usd::UsdErrors ParseUSDLinks(
         if (!errors.empty())
         {
           errors.emplace_back(UsdError(
-          gz::usd::UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
+          UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
             "Error parsing mesh"));
           return errors;
         }

@@ -47,10 +47,10 @@ namespace gz
     /// of _world. It must be initialized first
     /// \param[in] _path The USD path of the parsed world in _stage, which must
     /// be a valid USD path.
-    /// \return gz::usd::UsdErrors, which is a vector of UsdError objects.
+    /// \return UsdErrors, which is a vector of UsdError objects.
     /// Each UsdError includes an error code and message. An empty vector
     /// indicates no error.
-    gz::usd::UsdErrors GZ_USD_VISIBLE ParseSdfWorld(
+    UsdErrors GZ_USD_VISIBLE ParseSdfWorld(
         const sdf::World &_world,
         pxr::UsdStageRefPtr &_stage,
         const std::string &_path);

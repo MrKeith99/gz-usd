@@ -19,11 +19,11 @@
 #include <string>
 
 #include <gtest/gtest.h>
-#include <ignition/math/Angle.hh>
-#include <ignition/math/Helpers.hh>
-#include <ignition/math/Pose3.hh>
-#include <ignition/math/Quaternion.hh>
-#include <ignition/math/Vector3.hh>
+#include <gz/math/Angle.hh>
+#include <gz/math/Helpers.hh>
+#include <gz/math/Pose3.hh>
+#include <gz/math/Quaternion.hh>
+#include <gz/math/Vector3.hh>
 
 // TODO(ahcorde) this is to remove deprecated "warnings" in usd, these warnings
 // are reported using #pragma message so normal diagnostic flags cannot remove
@@ -85,7 +85,7 @@ class UsdJointStageFixture : public::testing::Test
 
     this->modelPath =
       std::string(this->worldPath.GetString() + "/" + this->model->Name());
-    const auto errors = gz::usd::ParseSdfModel(
+    const auto errors = usd::ParseSdfModel(
       *(this->model), this->stage,
       this->modelPath, this->worldPath);
     EXPECT_TRUE(errors.empty());
@@ -474,5 +474,5 @@ TEST_F(UsdJointStageFixture, BallPrismaticJoint)
 }
 
 // TODO(adlarkin) Add a test case for a revolute joint with the axis being "y".
-// This is a special case; see the gz::usd::SetUSDJointPose method in
+// This is a special case; see the usd::SetUSDJointPose method in
 // usd/src/sdf_parser/Joint.cc for how this is handled

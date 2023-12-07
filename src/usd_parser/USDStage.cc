@@ -57,22 +57,22 @@ namespace usd
 
   /////////////////////////////////////////////////
   USDStage::USDStage(const std::string &_refFileName)
-    : dataPtr(ignition::utils::MakeImpl<Implementation>())
+    : dataPtr(utils::MakeImpl<Implementation>())
   {
     this->dataPtr->refFileName = _refFileName;
   }
 
   /////////////////////////////////////////////////
-  gz::usd::UsdErrors USDStage::Init()
+  UsdErrors USDStage::Init()
   {
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
 
     // Open the stage
     auto referencee = pxr::UsdStage::Open(this->dataPtr->refFileName);
     if (!referencee)
     {
       errors.emplace_back(UsdError(
-        gz::usd::UsdErrorCode::INVALID_USD_FILE,
+        UsdErrorCode::INVALID_USD_FILE,
         "Failed to load usd file"));
       return errors;
     }
@@ -93,7 +93,7 @@ namespace usd
       {
         errors.emplace_back(
           UsdError(
-            gz::usd::UsdErrorCode::INVALID_UP_AXIS,
+            UsdErrorCode::INVALID_UP_AXIS,
             "Up axis should be 'Y' or 'Z'"));
         return errors;
       }

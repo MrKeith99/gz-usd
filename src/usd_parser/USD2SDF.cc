@@ -31,11 +31,11 @@ namespace gz {
 inline namespace GZ_USD_VERSION_NAMESPACE {
 namespace usd {
 ////////////////////////////////////////////////
-gz::usd::UsdErrors USD2SDF::Read(
+UsdErrors USD2SDF::Read(
   const std::string &_fileName, bool _useGazeboPlugins,
   sdf::Root &_root)
 {
-  gz::usd::UsdErrors errors;
+  UsdErrors errors;
 
   sdf::World sdfWorld;
 

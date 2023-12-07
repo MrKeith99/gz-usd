@@ -21,7 +21,7 @@
 #include <iostream>
 #include <string>
 
-#include <ignition/common/Util.hh>
+#include <gz/common/Util.hh>
 
 // TODO(ahcorde) this is to remove deprecated "warnings" in usd, these warnings
 // are reported using #pragma message so normal diagnostic flags cannot remove
@@ -49,10 +49,10 @@ inline namespace GZ_USD_VERSION_NAMESPACE {
 //
 namespace usd
 {
-  gz::usd::UsdErrors ParseSdfWorld(const sdf::World &_world,
+  UsdErrors ParseSdfWorld(const sdf::World &_world,
     pxr::UsdStageRefPtr &_stage, const std::string &_path)
   {
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
     _stage->SetMetadata(pxr::UsdGeomTokens->upAxis, pxr::UsdGeomTokens->z);
     _stage->SetEndTimeCode(100);
     _stage->SetMetadata(pxr::TfToken("metersPerUnit"), 1.0);
@@ -76,14 +76,14 @@ namespace usd
     {
       const auto model = *(_world.ModelByIndex(i));
       std::string modelName = model.Name();
-      modelName = gz::usd::validPath(modelName);
+      modelName = validPath(modelName);
       auto modelPath = std::string(_path + "/" + modelName);
-      gz::usd::UsdErrors modelErrors =
+      UsdErrors modelErrors =
         ParseSdfModel(model, _stage, modelPath, worldPrimPath);
       if (!modelErrors.empty())
       {
         errors.push_back(UsdError(
-              gz::usd::UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
+              UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
               "Error parsing model [" + modelName + "]"));
         errors.insert(errors.end(), modelErrors.begin(), modelErrors.end());
       }
@@ -93,13 +93,13 @@ namespace usd
     {
       const auto light = *(_world.LightByIndex(i));
       auto lightPath = std::string(_path + "/" + light.Name());
-      lightPath = gz::usd::validPath(lightPath);
-      gz::usd::UsdErrors lightErrors = ParseSdfLight(
+      lightPath = validPath(lightPath);
+      UsdErrors lightErrors = ParseSdfLight(
         light, _stage, lightPath);
       if (!lightErrors.empty())
       {
         errors.push_back(UsdError(
-              gz::usd::UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
+              UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
               "Error parsing light [" + light.Name() + "]"));
         errors.insert(errors.end(), lightErrors.begin(), lightErrors.end());
       }
