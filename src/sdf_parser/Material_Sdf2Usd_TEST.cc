@@ -17,8 +17,8 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/common/Material.hh>
-#include <ignition/common/Util.hh>
+#include <gz/common/Material.hh>
+#include <gz/common/Util.hh>
 
 // TODO(ahcorde) this is to remove deprecated "warnings" in usd, these warnings
 // are reported using #pragma message so normal diagnostic flags cannot remove
@@ -196,24 +196,24 @@ TEST_F(UsdStageFixture, MaterialTextureName)
   gz::testing::ScopeExit removeCopiedMaterials(
       []
       {
-        ignition::common::removeAll(
-          ignition::common::joinPaths(ignition::common::cwd(), "materials"));
+        common::removeAll(
+          common::joinPaths(common::cwd(), "materials"));
       });
 
-  sdf::setFindCallback(gz::usd::testing::findFileCb);
-  ignition::common::addFindFileURICallback(
-    std::bind(&gz::usd::testing::FindResourceUri, std::placeholders::_1));
+  sdf::setFindCallback(usd::testing::findFileCb);
+  common::addFindFileURICallback(
+    std::bind(&usd::testing::FindResourceUri, std::placeholders::_1));
   const auto path = gz::testing::TestFile("sdf", "basic_shapes.sdf");
 
-  ignition::common::Material materialCommon;
+  common::Material materialCommon;
   materialCommon.SetTextureImage("materials/textures/albedo_map.png");
 
-  const sdf::Material materialSdf = gz::usd::convert(&materialCommon);
+  const sdf::Material materialSdf = usd::convert(&materialCommon);
 
   const auto materialPathStr = std::string("/Looks/Material_0");
   auto materialPath = pxr::SdfPath(materialPathStr);
 
-  gz::usd::UsdErrors errors = gz::usd::ParseSdfMaterial(
+  usd::UsdErrors errors = usd::ParseSdfMaterial(
     &materialSdf, stage, materialPath);
   EXPECT_TRUE(errors.empty());
 
@@ -255,13 +255,13 @@ TEST_F(UsdStageFixture, Material)
   gz::testing::ScopeExit removeCopiedMaterials(
       []
       {
-        ignition::common::removeAll(
-          ignition::common::joinPaths(ignition::common::cwd(), "materials"));
+        common::removeAll(
+          common::joinPaths(common::cwd(), "materials"));
       });
 
-  sdf::setFindCallback(gz::usd::testing::findFileCb);
-  ignition::common::addFindFileURICallback(
-    std::bind(&gz::usd::testing::FindResourceUri, std::placeholders::_1));
+  sdf::setFindCallback(usd::testing::findFileCb);
+  common::addFindFileURICallback(
+    std::bind(&usd::testing::FindResourceUri, std::placeholders::_1));
 
   const auto path = gz::testing::TestFile("sdf", "basic_shapes.sdf");
   sdf::Root root;
@@ -271,7 +271,7 @@ TEST_F(UsdStageFixture, Material)
   auto world = root.WorldByIndex(0u);
 
   const auto worldPath = std::string("/" + world->Name());
-  auto usdErrors = gz::usd::ParseSdfWorld(*world, stage, worldPath);
+  auto usdErrors = usd::ParseSdfWorld(*world, stage, worldPath);
   EXPECT_TRUE(usdErrors.empty());
 
   auto worldPrim = this->stage->GetPrimAtPath(pxr::SdfPath(worldPath));

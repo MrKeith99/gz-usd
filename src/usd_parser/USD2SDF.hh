@@ -44,10 +44,10 @@ inline namespace GZ_USD_VERSION_NAMESPACE {
       /// in it (true) or not (false)
       /// \param[out] _root Root element to populate with the equivalent sdf
       /// information from _fileName.
-      /// \return gz::usd::UsdErrors, which is a list of UsdError objects.
+      /// \return UsdErrors, which is a list of UsdError objects.
       /// An empty list means no errors occurred when populating _root with
       /// the contentsof _fileName
-      public: gz::usd::UsdErrors Read(
+      public: UsdErrors Read(
         const std::string &_fileName,
         bool _useGazeboPlugins,
         sdf::Root &_root);

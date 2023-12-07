@@ -19,7 +19,7 @@
 
 #include <string>
 
-#include <ignition/math/Pose3.hh>
+#include <gz/math/Pose3.hh>
 
 // TODO(adlarkin) this is to remove deprecated "warnings" in usd, these warnings
 // are reported using #pragma message so normal diagnostic flags cannot remove
@@ -46,16 +46,16 @@ inline namespace GZ_USD_VERSION_NAMESPACE {
 //
 namespace usd
 {
-  gz::usd::UsdErrors ParseSdfVisual(const sdf::Visual &_visual,
+  UsdErrors ParseSdfVisual(const sdf::Visual &_visual,
       pxr::UsdStageRefPtr &_stage, const std::string &_path)
   {
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
     const pxr::SdfPath sdfVisualPath(_path);
     auto usdVisualXform = pxr::UsdGeomXform::Define(_stage, sdfVisualPath);
     if (!usdVisualXform)
     {
       errors.push_back(UsdError(
-        gz::usd::UsdErrorCode::FAILED_USD_DEFINITION,
+        UsdErrorCode::FAILED_USD_DEFINITION,
         "Not able to define a Geom Xform at path [" + _path + "]"));
       return errors;
     }
@@ -82,13 +82,13 @@ namespace usd
 
     const auto geometry = *(_visual.Geom());
     auto geometryPath = std::string(_path + "/geometry");
-    geometryPath = gz::usd::validPath(geometryPath);
+    geometryPath = validPath(geometryPath);
     auto geomErrors = ParseSdfGeometry(geometry, _stage, geometryPath);
     if (!geomErrors.empty())
     {
       errors.insert(errors.end(), geomErrors.begin(), geomErrors.end());
       errors.push_back(UsdError(
-        gz::usd::UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
+        UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
         "Error parsing geometry attached to visual [" + _visual.Name() + "]"));
       return errors;
     }
@@ -98,14 +98,14 @@ namespace usd
       if (_visual.Material())
       {
         pxr::SdfPath materialPath;
-        gz::usd::UsdErrors materialErrors = ParseSdfMaterial(
+        UsdErrors materialErrors = ParseSdfMaterial(
           _visual.Material(), _stage, materialPath);
         if (!materialErrors.empty())
         {
           errors.insert(errors.end(), materialErrors.begin(),
               materialErrors.end());
           errors.push_back(UsdError(
-            gz::usd::UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
+            UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
             "Error parsing material attached to visual ["
             + _visual.Name() + "]"));
           return errors;
@@ -116,7 +116,7 @@ namespace usd
         if (!materialUSD)
         {
           errors.push_back(UsdError(
-            gz::usd::UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
+            UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
             "Unable to convert prim at path [" + materialPath.GetString()
             + "] to a pxr::UsdShadeMaterial."));
           return errors;
@@ -126,7 +126,7 @@ namespace usd
     }
     else
     {
-      errors.push_back(UsdError(gz::usd::UsdErrorCode::INVALID_PRIM_PATH,
+      errors.push_back(UsdError(UsdErrorCode::INVALID_PRIM_PATH,
         "Internal error: no geometry prim exists at path ["
         + geometryPath + "]"));
       return errors;

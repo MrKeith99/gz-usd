@@ -21,7 +21,7 @@
 
 #include <gtest/gtest.h>
 
-#include <ignition/utils/ExtraTestMacros.hh>
+#include <gz/utils/ExtraTestMacros.hh>
 
 #include "test_config.h"
 #include "test_utils.hh"
@@ -49,8 +49,8 @@ void checkTransforms(
   pxr::UsdPrim prim = _stage->GetPrimAtPath(pxr::SdfPath(_primName));
   ASSERT_TRUE(prim);
 
-  gz::usd::UDSTransforms usdTransforms =
-    gz::usd::ParseUSDTransform(prim);
+  usd::UDSTransforms usdTransforms =
+    usd::ParseUSDTransform(prim);
 
   EXPECT_EQ(_translation, usdTransforms.Translation());
   EXPECT_EQ(_scale, usdTransforms.Scale());
@@ -160,7 +160,7 @@ TEST(USDTransformsTest, GetAllTransform)
     auto stage = pxr::UsdStage::Open(filename);
     ASSERT_TRUE(stage);
 
-    gz::usd::USDData usdData(filename);
+    usd::USDData usdData(filename);
     usdData.Init();
 
     pxr::UsdPrim prim = stage->GetPrimAtPath(
@@ -171,7 +171,7 @@ TEST(USDTransformsTest, GetAllTransform)
     math::Pose3d pose;
     math::Vector3d scale{1, 1, 1};
 
-    gz::usd::GetTransform(prim, usdData, pose, scale, "/shapes");
+    usd::GetTransform(prim, usdData, pose, scale, "/shapes");
 
     EXPECT_EQ(math::Vector3d(0.4, 0.6, 1), scale);
     EXPECT_EQ(
@@ -188,7 +188,7 @@ TEST(USDTransformsTest, GetAllTransform)
     auto stage = pxr::UsdStage::Open(filename);
     ASSERT_TRUE(stage);
 
-    gz::usd::USDData usdData(filename);
+    usd::USDData usdData(filename);
     usdData.Init();
 
     std::function<void(
@@ -205,7 +205,7 @@ TEST(USDTransformsTest, GetAllTransform)
         math::Pose3d pose;
         math::Vector3d scale{1, 1, 1};
 
-        gz::usd::GetTransform(prim, usdData, pose, scale, "/transforms");
+        usd::GetTransform(prim, usdData, pose, scale, "/transforms");
 
         EXPECT_EQ(math::Vector3d(1, 1, 1), scale);
         EXPECT_EQ(math::Pose3d(_posePrim, _qPrim), pose);

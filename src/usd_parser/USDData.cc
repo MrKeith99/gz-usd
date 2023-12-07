@@ -32,8 +32,8 @@
 #include <pxr/usd/usdShade/material.h>
 #pragma pop_macro ("__DEPRECATED")
 
-#include <ignition/common/Filesystem.hh>
-#include <ignition/common/Util.hh>
+#include <gz/common/Filesystem.hh>
+#include <gz/common/Util.hh>
 
 #include "sdf/Material.hh"
 #include "USDMaterial.hh"
@@ -67,14 +67,14 @@ namespace usd {
       /// \param[in] _path Path of the subdirectory to add
       void AddSubdirectories(const std::string &_path)
       {
-        for (ignition::common::DirIter file(_path);
-          file != ignition::common::DirIter(); ++file)
+        for (common::DirIter file(_path);
+          file != common::DirIter(); ++file)
         {
           std::string current(*file);
 
-          if (ignition::common::isDirectory(current))
+          if (common::isDirectory(current))
           {
-            auto systemPaths = ignition::common::systemPaths();
+            auto systemPaths = common::systemPaths();
             systemPaths->AddFilePaths(current);
             this->AddSubdirectories(current);
           }
@@ -84,7 +84,7 @@ namespace usd {
 
   /////////////////////////////////////////////////
   USDData::USDData(const std::string &_filename)
-    : dataPtr(ignition::utils::MakeImpl<Implementation>())
+    : dataPtr(utils::MakeImpl<Implementation>())
   {
     this->dataPtr->filename = _filename;
   }
@@ -110,12 +110,12 @@ namespace usd {
   }
 
   /////////////////////////////////////////////////
-  gz::usd::UsdErrors USDData::Init()
+  UsdErrors USDData::Init()
   {
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
 
     auto usdStage = std::make_shared<USDStage>(this->dataPtr->filename);
-    gz::usd::UsdErrors errorsInit = usdStage->Init();
+    UsdErrors errorsInit = usdStage->Init();
     if(!errorsInit.empty())
     {
       errors.insert(errors.end(), errorsInit.begin(), errorsInit.end());
@@ -133,17 +133,17 @@ namespace usd {
     if (!referencee)
     {
       errors.emplace_back(UsdError(
-        gz::usd::UsdErrorCode::INVALID_USD_FILE,
+        UsdErrorCode::INVALID_USD_FILE,
         "Failed to load usd file"));
       return errors;
     }
 
-    this->dataPtr->directoryPath = ignition::common::absPath(
+    this->dataPtr->directoryPath = common::absPath(
       this->dataPtr->filename);
 
-    std::string basename = ignition::common::basename(
+    std::string basename = common::basename(
       this->dataPtr->directoryPath);
-    this->dataPtr->directoryPath = ignition::common::replaceAll(
+    this->dataPtr->directoryPath = common::replaceAll(
         this->dataPtr->directoryPath, basename, "");
 
     this->dataPtr->AddSubdirectories(this->dataPtr->directoryPath);
@@ -182,14 +182,14 @@ namespace usd {
   }
 
   /////////////////////////////////////////////////
-  gz::usd::UsdErrors USDData::ParseMaterials()
+  UsdErrors USDData::ParseMaterials()
   {
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
     auto referencee = pxr::UsdStage::Open(this->dataPtr->filename);
     if (!referencee)
     {
       errors.emplace_back(UsdError(
-        gz::usd::UsdErrorCode::INVALID_USD_FILE,
+        UsdErrorCode::INVALID_USD_FILE,
         "Failed to load usd file"));
       return errors;
     }
@@ -210,11 +210,11 @@ namespace usd {
         }
 
         sdf::Material material;
-        gz::usd::UsdErrors errrosMaterial = ParseMaterial(prim, material);
+        UsdErrors errrosMaterial = ParseMaterial(prim, material);
         if (!errrosMaterial.empty())
         {
           errors.emplace_back(UsdError(
-            gz::usd::UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
+            UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
             "Error parsing material"));
           errors.insert(
             errors.end(), errrosMaterial.begin(), errrosMaterial.end());
@@ -248,35 +248,35 @@ namespace usd {
   }
 
   /////////////////////////////////////////////////
-  gz::usd::UsdErrors USDData::AddStage(const std::string &_ref)
+  UsdErrors USDData::AddStage(const std::string &_ref)
   {
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
     std::string key = _ref;
 
     auto search = this->dataPtr->references.find(_ref);
     if (search == this->dataPtr->references.end())
     {
-      std::string basename = ignition::common::basename(key);
-      auto subDirectory = ignition::common::replaceAll(key, basename, "");
+      std::string basename = common::basename(key);
+      auto subDirectory = common::replaceAll(key, basename, "");
 
-      auto systemPaths = ignition::common::systemPaths();
-      systemPaths->AddFilePaths(ignition::common::joinPaths(
+      auto systemPaths = common::systemPaths();
+      systemPaths->AddFilePaths(common::joinPaths(
         this->dataPtr->directoryPath, subDirectory));
 
-      this->dataPtr->AddSubdirectories(ignition::common::joinPaths(
+      this->dataPtr->AddSubdirectories(common::joinPaths(
         this->dataPtr->directoryPath, subDirectory));
 
-      std::string fileNameRef = ignition::common::findFile(basename);
+      std::string fileNameRef = common::findFile(basename);
       if (fileNameRef.empty())
       {
         errors.emplace_back(UsdError(
-          gz::usd::UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
+          UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
           "Not able to find asset [" + _ref + "]"));
         return errors;
       }
 
       auto usdStage = std::make_shared<USDStage>(fileNameRef);
-      gz::usd::UsdErrors errorsInit = usdStage->Init();
+      UsdErrors errorsInit = usdStage->Init();
       if(!errorsInit.empty())
       {
         errors.insert(errors.end(), errorsInit.begin(), errorsInit.end());
@@ -292,7 +292,7 @@ namespace usd {
     else
     {
       errors.emplace_back(UsdError(
-        gz::usd::UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
+        UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
         "Element already exists"));
       return errors;
     }

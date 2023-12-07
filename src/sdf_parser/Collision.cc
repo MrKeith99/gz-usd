@@ -19,7 +19,7 @@
 
 #include <string>
 
-#include <ignition/math/Pose3.hh>
+#include <gz/math/Pose3.hh>
 
 // TODO(adlarkin) this is to remove deprecated "warnings" in usd, these warnings
 // are reported using #pragma message so normal diagnostic flags cannot remove
@@ -47,17 +47,17 @@ inline namespace GZ_USD_VERSION_NAMESPACE {
 //
 namespace usd
 {
-  gz::usd::UsdErrors ParseSdfCollision(const sdf::Collision &_collision,
+  UsdErrors ParseSdfCollision(const sdf::Collision &_collision,
       pxr::UsdStageRefPtr &_stage, const std::string &_path)
   {
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
     const pxr::SdfPath sdfCollisionPath(_path);
     auto usdCollisionXform = pxr::UsdGeomXform::Define(
       _stage, sdfCollisionPath);
     if (!usdCollisionXform)
     {
       errors.push_back(UsdError(
-        gz::usd::UsdErrorCode::FAILED_USD_DEFINITION,
+        UsdErrorCode::FAILED_USD_DEFINITION,
         "Not able to define a Geom Xform at path [" + _path + "]"));
       return errors;
     }
@@ -104,7 +104,7 @@ namespace usd
     {
       errors.insert(errors.end(), geomErrors.begin(), geomErrors.end());
       errors.push_back(UsdError(
-        gz::usd::UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
+        UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
         "Error parsing geometry attached to _collision [" +
         _collision.Name() + "]"));
       return errors;
@@ -113,7 +113,7 @@ namespace usd
     auto geomPrim = _stage->GetPrimAtPath(pxr::SdfPath(geometryPath));
     if (!geomPrim)
     {
-      errors.push_back(UsdError(gz::usd::UsdErrorCode::INVALID_PRIM_PATH,
+      errors.push_back(UsdError(UsdErrorCode::INVALID_PRIM_PATH,
         "Internal error: unable to get prim at path ["
         + geometryPath + "], but a geom prim should exist at this path"));
       return errors;
@@ -122,7 +122,7 @@ namespace usd
     if (!pxr::UsdPhysicsCollisionAPI::Apply(geomPrim))
     {
       errors.push_back(UsdError(
-        gz::usd::UsdErrorCode::FAILED_PRIM_API_APPLY,
+        UsdErrorCode::FAILED_PRIM_API_APPLY,
         "Internal error: unable to apply a collision to the prim at path ["
         + geometryPath + "]"));
       return errors;

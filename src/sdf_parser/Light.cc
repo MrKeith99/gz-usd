@@ -19,7 +19,7 @@
 
 #include <string>
 
-#include <ignition/math/Pose3.hh>
+#include <gz/math/Pose3.hh>
 
 #include <pxr/base/tf/token.h>
 #include <pxr/usd/sdf/path.h>
@@ -44,11 +44,11 @@ inline namespace GZ_USD_VERSION_NAMESPACE {
 //
 namespace usd
 {
-  gz::usd::UsdErrors ParseSdfLight(const sdf::Light &_light,
+  UsdErrors ParseSdfLight(const sdf::Light &_light,
       pxr::UsdStageRefPtr &_stage, const std::string &_path)
   {
     const pxr::SdfPath sdfLightPath(_path);
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
     switch (_light.Type())
     {
       case sdf::LightType::POINT:
@@ -76,7 +76,7 @@ namespace usd
     // to the USD API, things like UsdLuxDistantLight and UsdLuxDiskLight emit
     // light along the -Z axis, so I'm not sure if this can be changed.
     math::Pose3d pose;
-    auto poseErrors = gz::usd::PoseWrtParent(_light, pose);
+    auto poseErrors = PoseWrtParent(_light, pose);
     if (!poseErrors.empty())
     {
       for (const auto &e : poseErrors)
@@ -84,7 +84,7 @@ namespace usd
       return errors;
     }
 
-    poseErrors = gz::usd::SetPose(pose, _stage, sdfLightPath);
+    poseErrors = SetPose(pose, _stage, sdfLightPath);
     if (!poseErrors.empty())
     {
       for (const auto &e : poseErrors)

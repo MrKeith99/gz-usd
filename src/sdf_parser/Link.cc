@@ -19,7 +19,7 @@
 
 #include <string>
 
-#include <ignition/math/Pose3.hh>
+#include <gz/math/Pose3.hh>
 
 // TODO(ahcorde) this is to remove deprecated "warnings" in usd, these warnings
 // are reported using #pragma message so normal diagnostic flags cannot remove
@@ -49,18 +49,18 @@ inline namespace GZ_USD_VERSION_NAMESPACE {
 //
 namespace usd
 {
-  gz::usd::UsdErrors ParseSdfLink(const sdf::Link &_link,
+  UsdErrors ParseSdfLink(const sdf::Link &_link,
     pxr::UsdStageRefPtr &_stage,
     const std::string &_path,
     bool _rigidBody)
   {
     const pxr::SdfPath sdfLinkPath(_path);
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
 
     auto usdLinkXform = pxr::UsdGeomXform::Define(_stage, sdfLinkPath);
 
     math::Pose3d pose;
-    auto poseErrors = gz::usd::PoseWrtParent(_link, pose);
+    auto poseErrors = PoseWrtParent(_link, pose);
     if (!poseErrors.empty())
     {
       errors.insert(errors.end(), poseErrors.begin(), poseErrors.end());
@@ -83,7 +83,7 @@ namespace usd
       if (!linkPrim)
       {
         errors.push_back(UsdError(
-          gz::usd::UsdErrorCode::INVALID_PRIM_PATH,
+          UsdErrorCode::INVALID_PRIM_PATH,
           "Internal error: unable to get prim at path ["
           + _path + "], but a link prim should exist at this path"));
         return errors;
@@ -92,7 +92,7 @@ namespace usd
       if (!pxr::UsdPhysicsRigidBodyAPI::Apply(linkPrim))
       {
         errors.push_back(UsdError(
-          gz::usd::UsdErrorCode::FAILED_PRIM_API_APPLY,
+          UsdErrorCode::FAILED_PRIM_API_APPLY,
           "Internal error: unable to mark model at path [" +
           linkPrim.GetPath().GetString() + "] as a rigid body, "
           "so mass properties won't be attached"));
@@ -104,7 +104,7 @@ namespace usd
       if (!massAPI)
       {
         errors.push_back(UsdError(
-          gz::usd::UsdErrorCode::FAILED_PRIM_API_APPLY,
+          UsdErrorCode::FAILED_PRIM_API_APPLY,
           "Unable to attach mass properties to link ["
           + _link.Name() + "]"));
         return errors;
@@ -137,13 +137,13 @@ namespace usd
     {
       const auto visual = *(_link.VisualByIndex(i));
       auto visualPath = std::string(_path + "/" + visual.Name());
-      visualPath = gz::usd::validPath(visualPath);
+      visualPath = validPath(visualPath);
       auto errorsLink = ParseSdfVisual(visual, _stage, visualPath);
       if (!errorsLink.empty())
       {
         errors.insert(errors.end(), errorsLink.begin(), errorsLink.end());
         errors.push_back(UsdError(
-          gz::usd::UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
+          UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
           "Error parsing visual [" + visual.Name() + "]"));
         return errors;
       }
@@ -154,7 +154,7 @@ namespace usd
     {
       const auto collision = *(_link.CollisionByIndex(i));
       auto collisionPath = std::string(_path + "/" + collision.Name());
-      collisionPath = gz::usd::validPath(collisionPath);
+      collisionPath = validPath(collisionPath);
       auto errorsCollision = ParseSdfCollision(collision, _stage,
           collisionPath);
       if (!errorsCollision.empty())
@@ -162,7 +162,7 @@ namespace usd
         errors.insert(errors.end(), errorsCollision.begin(),
             errorsCollision.end());
         errors.push_back(UsdError(
-          gz::usd::UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
+          UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
           "Error parsing collision [" + collision.Name()
           + "] attached to link [" + _link.Name() + "]"));
         return errors;
@@ -174,14 +174,14 @@ namespace usd
     {
       const auto sensor = *(_link.SensorByIndex(i));
       auto sensorPath = std::string(_path + "/" + sensor.Name());
-      sensorPath = gz::usd::validPath(sensorPath);
-      gz::usd::UsdErrors errorsSensor = ParseSdfSensor(
+      sensorPath = validPath(sensorPath);
+      UsdErrors errorsSensor = ParseSdfSensor(
         sensor, _stage, sensorPath);
       if (!errorsSensor.empty())
       {
         errors.push_back(
             UsdError(
-              gz::usd::UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
+              UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
               "Error parsing sensor [" + sensor.Name() + "]"));
         errors.insert(errors.end(), errorsSensor.begin(), errorsSensor.end());
         return errors;
@@ -193,14 +193,14 @@ namespace usd
     {
       const auto light = *(_link.LightByIndex(i));
       auto lightPath = std::string(_path + "/" + light.Name());
-      lightPath = gz::usd::validPath(lightPath);
-      gz::usd::UsdErrors lightErrors = ParseSdfLight(
+      lightPath = validPath(lightPath);
+      UsdErrors lightErrors = ParseSdfLight(
         light, _stage, lightPath);
       if (!lightErrors.empty())
       {
         errors.push_back(
             UsdError(
-              gz::usd::UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
+              UsdErrorCode::GZ_USD_TO_USD_PARSING_ERROR,
               "Error parsing light [" + light.Name() + "]"));
         errors.insert(errors.end(), lightErrors.begin(), lightErrors.end());
       }

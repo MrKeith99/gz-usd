@@ -33,8 +33,8 @@
 #include <gz/usd/usd_parser/USDData.hh>
 #include <gz/usd/UsdError.hh>
 
-#include <ignition/math/Color.hh>
-#include <ignition/math/Pose3.hh>
+#include <gz/math/Color.hh>
+#include <gz/math/Pose3.hh>
 
 #include "test_config.h"
 #include "test_utils.hh"
@@ -49,7 +49,7 @@ using namespace gz;
 TEST(USDLightsTest, DistanceLight)
 {
   std::string filename = gz::testing::TestFile("usd", "upAxisZ.usda");
-  gz::usd::USDData usdData(filename);
+  usd::USDData usdData(filename);
   EXPECT_EQ(0u, usdData.Init().size());
 
   auto stage = pxr::UsdStage::Open(filename);
@@ -59,7 +59,7 @@ TEST(USDLightsTest, DistanceLight)
     pxr::SdfPath("/defaultLight"));
   ASSERT_TRUE(prim);
 
-  auto light = gz::usd::ParseUSDLights(
+  auto light = usd::ParseUSDLights(
     prim, usdData, "");
   ASSERT_TRUE(light);
 
@@ -75,7 +75,7 @@ TEST(USDLightsTest, DistanceLight)
   prim = stage->GetPrimAtPath(pxr::SdfPath("/diskLight"));
   ASSERT_TRUE(prim);
 
-  auto diskLight = gz::usd::ParseUSDLights(
+  auto diskLight = usd::ParseUSDLights(
     prim, usdData, "");
   ASSERT_TRUE(diskLight);
 

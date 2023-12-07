@@ -46,10 +46,10 @@ namespace gz
     /// of _visual.
     /// \param[in] _path The USD path of the parsed visual in _stage, which must
     /// be a valid USD path.
-    /// \return gz::usd::UsdErrors, which is a vector of UsdError objects.
+    /// \return UsdErrors, which is a vector of UsdError objects.
     /// Each UsdError includes an error code and message. An empty vector
     /// indicates no error.
-    gz::usd::UsdErrors ParseSdfVisual(
+    UsdErrors ParseSdfVisual(
         const sdf::Visual &_visual, pxr::UsdStageRefPtr &_stage,
         const std::string &_path);
   }

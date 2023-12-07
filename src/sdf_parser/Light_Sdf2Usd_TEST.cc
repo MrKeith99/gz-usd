@@ -20,7 +20,7 @@
 #include <string>
 #include <unordered_map>
 
-#include <ignition/math/Pose3.hh>
+#include <gz/math/Pose3.hh>
 
 #pragma push_macro ("__DEPRECATED")
 #undef __DEPRECATED
@@ -111,7 +111,7 @@ TEST_F(UsdLightStageFixture, Lights)
     const auto light = *(world->LightByIndex(i));
     const auto lightPath = std::string("/" + light.Name());
     lightPathToSdf[lightPath] = light;
-    const auto errors = gz::usd::ParseSdfLight(
+    const auto errors = usd::ParseSdfLight(
       light, this->stage, lightPath);
     EXPECT_TRUE(errors.empty());
   }
@@ -122,13 +122,13 @@ TEST_F(UsdLightStageFixture, Lights)
   for (uint64_t i = 0; i < world->ModelCount(); ++i)
   {
     // create a dummy world path so that we can call the
-    // gz::usd::ParseSdfModel API
+    // usd::ParseSdfModel API
     const auto worldPath = pxr::SdfPath("/" + world->Name());
 
     const auto model = *(world->ModelByIndex(i));
     const auto modelPath = std::string("/" + model.Name());
     const auto errors =
-      gz::usd::ParseSdfModel(model, this->stage, modelPath, worldPath);
+      usd::ParseSdfModel(model, this->stage, modelPath, worldPath);
     EXPECT_TRUE(errors.empty());
 
     // save the model's USD light paths so that they can be verified later
@@ -195,9 +195,9 @@ TEST_F(UsdLightStageFixture, Lights)
     {
       this->CheckLightIntensity(lightUsd, lightSdf);
       math::Pose3d pose;
-      const auto poseErrors = gz::usd::PoseWrtParent(lightSdf, pose);
+      const auto poseErrors = usd::PoseWrtParent(lightSdf, pose);
       EXPECT_TRUE(poseErrors.empty());
-      gz::usd::testing::CheckPrimPose(lightUsd, pose);
+      usd::testing::CheckPrimPose(lightUsd, pose);
     }
   }
   EXPECT_EQ(2, numPointLights);

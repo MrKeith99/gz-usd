@@ -19,9 +19,9 @@
 
 #include <sstream>
 
-#include <ignition/math/Angle.hh>
-#include <ignition/math/Pose3.hh>
-#include <ignition/math/Vector3.hh>
+#include <gz/math/Angle.hh>
+#include <gz/math/Pose3.hh>
+#include <gz/math/Vector3.hh>
 
 // TODO(ahcorde) this is to remove deprecated "warnings" in usd, these warnings
 // are reported using #pragma message so normal diagnostic flags cannot remove
@@ -62,14 +62,14 @@ namespace usd
   /// \param[in] _jointPrim The USD joint prim
   /// \param[in] _joint The SDF representation of _jointPrim
   /// \param[in] _parentModel The SDF model that is the parent of _joint
-  /// \return gz::usd::UsdErrors, which is a vector of UsdError objects.
+  /// \return UsdErrors, which is a vector of UsdError objects.
   /// Each UsdError includes an error code and message. An empty vector
   /// indicates no error occurred when setting _joint's pose relative to
   /// _joint's parent and child
-  gz::usd::UsdErrors SetUSDJointPose(pxr::UsdPhysicsJoint &_jointPrim,
+  UsdErrors SetUSDJointPose(pxr::UsdPhysicsJoint &_jointPrim,
       const sdf::Joint &_joint, const sdf::Model &_parentModel)
   {
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
 
     math::Pose3d parentToJoint;
     if (_joint.ParentName() == "world")
@@ -188,14 +188,14 @@ namespace usd
   /// valid, initialized stage.
   /// \param[in] _path The path in _stage where the USD representation of _joint
   /// will be defined.
-  /// \return gz::usd::UsdErrors, which is a vector of UsdError objects.
+  /// \return UsdErrors, which is a vector of UsdError objects.
   /// Each UsdError includes an error code and message. An empty vector
   /// indicates no error occurred when converting _joint to its USD
   /// representation.
-  gz::usd::UsdErrors ParseSdfRevoluteJoint(const sdf::Joint &_joint,
+  UsdErrors ParseSdfRevoluteJoint(const sdf::Joint &_joint,
       pxr::UsdStageRefPtr &_stage, const std::string &_path)
   {
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
 
     auto usdJoint =
       pxr::UsdPhysicsRevoluteJoint::Define(_stage, pxr::SdfPath(_path));
@@ -242,7 +242,7 @@ namespace usd
     if (!drive)
     {
       errors.push_back(UsdError(
-        gz::usd::UsdErrorCode::FAILED_PRIM_API_APPLY,
+        UsdErrorCode::FAILED_PRIM_API_APPLY,
         "Internal error: unable to mark link at path [" + _path +
         "] as a UsdPhysicsDriveAPI."));
       return errors;
@@ -263,14 +263,14 @@ namespace usd
   /// valid, initialized stage.
   /// \param[in] _path The path in _stage where the USD representation of _joint
   /// will be defined.
-  /// \return gz::usd::UsdErrors, which is a vector of UsdError objects.
+  /// \return UsdErrors, which is a vector of UsdError objects.
   /// Each UsdError includes an error code and message. An empty vector
   /// indicates no error occurred when converting _joint to its USD
   /// representation.
-  gz::usd::UsdErrors ParseSdfPrismaticJoint(const sdf::Joint &_joint,
+  UsdErrors ParseSdfPrismaticJoint(const sdf::Joint &_joint,
       pxr::UsdStageRefPtr &_stage, const std::string &_path)
   {
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
 
     auto usdJoint =
       pxr::UsdPhysicsPrismaticJoint::Define(_stage, pxr::SdfPath(_path));
@@ -311,13 +311,13 @@ namespace usd
     return errors;
   }
 
-  gz::usd::UsdErrors ParseSdfJoint(const sdf::Joint &_joint,
+  UsdErrors ParseSdfJoint(const sdf::Joint &_joint,
       pxr::UsdStageRefPtr &_stage, const std::string &_path,
       const sdf::Model &_parentModel,
       const std::unordered_map<std::string, pxr::SdfPath> &_linkToUsdPath,
       const pxr::SdfPath &_worldPath)
   {
-    gz::usd::UsdErrors errors;
+    UsdErrors errors;
 
     // the joint's parent may be "world". If this is the case, the joint's
     // parent should be set to the world prim, not a link
@@ -328,7 +328,7 @@ namespace usd
       if (it == _linkToUsdPath.end())
       {
         errors.push_back(UsdError(
-          gz::usd::UsdErrorCode::INVALID_PRIM_PATH,
+          UsdErrorCode::INVALID_PRIM_PATH,
           "Unable to find a USD path for link [" + _joint.ParentName() +
           "], which is the parent link of joint [" + _joint.Name() + "]."));
         return errors;
@@ -339,14 +339,14 @@ namespace usd
     const auto it = _linkToUsdPath.find(_joint.ChildName());
     if (it == _linkToUsdPath.end())
     {
-      errors.push_back(UsdError(gz::usd::UsdErrorCode::INVALID_PRIM_PATH,
+      errors.push_back(UsdError(UsdErrorCode::INVALID_PRIM_PATH,
             "Unable to find a USD path for link [" + _joint.ParentName() +
             "], which is the child link of joint [" + _joint.Name() + "]."));
       return errors;
     }
     const auto childLinkPath = it->second;
 
-    gz::usd::UsdErrors parsingErrors;
+    UsdErrors parsingErrors;
     switch (_joint.Type())
     {
       case sdf::JointType::REVOLUTE:
@@ -387,7 +387,7 @@ namespace usd
     auto jointPrim = pxr::UsdPhysicsJoint::Get(_stage, pxr::SdfPath(_path));
     if (!jointPrim)
     {
-      errors.push_back(UsdError(gz::usd::UsdErrorCode::INVALID_PRIM_PATH,
+      errors.push_back(UsdError(UsdErrorCode::INVALID_PRIM_PATH,
             "Internal error: unable to get prim at path [" + _path +
             "], but a joint prim should exist at this path."));
       return errors;

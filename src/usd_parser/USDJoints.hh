@@ -43,9 +43,9 @@ namespace gz
     /// \param[in] _prim The USD prim that holds the USD joint
     /// \param[in] _usdData Object that holds data about the USD stage
     /// \param[out] _joint SDF joint to return
-    /// \return gz::usd::UsdErrors, which is a list of UsdError objects.
+    /// \return UsdErrors, which is a list of UsdError objects.
     /// An empty list means there were no errors parsing joint
-    gz::usd::UsdErrors ParseJoints(
+    UsdErrors ParseJoints(
       const pxr::UsdPrim &_prim,
       const USDData &_usdData,
       sdf::Joint &_joint);

@@ -32,7 +32,7 @@
 #include <pxr/usd/usdGeom/cube.h>
 #pragma pop_macro ("__DEPRECATED")
 
-#include <ignition/common/Util.hh>
+#include <gz/common/Util.hh>
 
 #include "gz/usd/sdf_parser/World.hh"
 #include "sdf/Root.hh"
@@ -60,9 +60,9 @@ class UsdStageFixture : public::testing::Test
 /////////////////////////////////////////////////
 TEST_F(UsdStageFixture, Sensors)
 {
-  sdf::setFindCallback(gz::usd::testing::findFileCb);
-  ignition::common::addFindFileURICallback(
-    std::bind(&gz::usd::testing::FindResourceUri, std::placeholders::_1));
+  sdf::setFindCallback(usd::testing::findFileCb);
+  common::addFindFileURICallback(
+    std::bind(&usd::testing::FindResourceUri, std::placeholders::_1));
 
   const auto path = gz::testing::TestFile("sdf", "usd_sensors.sdf");
   sdf::Root root;
@@ -72,7 +72,7 @@ TEST_F(UsdStageFixture, Sensors)
   auto world = root.WorldByIndex(0u);
 
   const auto worldPath = std::string("/" + world->Name());
-  auto usdErrors = gz::usd::ParseSdfWorld(*world, stage, worldPath);
+  auto usdErrors = usd::ParseSdfWorld(*world, stage, worldPath);
   EXPECT_TRUE(usdErrors.empty());
 
   auto worldPrim = this->stage->GetPrimAtPath(pxr::SdfPath(worldPath));

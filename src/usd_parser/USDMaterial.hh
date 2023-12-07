@@ -44,10 +44,10 @@ namespace gz
     /// \param[in] _prim USD prim where the material is extracted
     /// \param[out] _material The sdf::Material representation of _prim's
     /// material
-    /// \return gz::usd::UsdErrors, which is a vector of UsdError objects.
+    /// \return UsdErrors, which is a vector of UsdError objects.
     /// Each UsdErrorincludes an error code and message. An empty vector
     /// indicates no error.
-    gz::usd::UsdErrors ParseMaterial(const pxr::UsdPrim &_prim,
+    UsdErrors ParseMaterial(const pxr::UsdPrim &_prim,
         sdf::Material &_material);
 }
 }

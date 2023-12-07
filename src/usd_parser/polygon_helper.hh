@@ -48,10 +48,10 @@ namespace gz
   /// face of the mesh.
   /// \param[out] _triangles A flat list of vertex indices, with each face
   /// converted to one or more triangles.
-  /// \return gz::usd::UsdErrors, which is a vector of UsdError objects.
+  /// \return UsdErrors, which is a vector of UsdError objects.
   /// Each UsdError includes an error code and message. An empty vector
   /// indicates no error occurred when parsing the polygons.
-  gz::usd::UsdErrors PolygonToTriangles(
+  UsdErrors PolygonToTriangles(
     const pxr::VtIntArray &_faceVertexIndices,
     const pxr::VtIntArray &_faceVertexCounts,
     std::vector<unsigned int> &_triangles);

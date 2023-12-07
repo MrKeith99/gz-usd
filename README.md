@@ -1,96 +1,186 @@
-Gazebo version | Branch
--- | --
-Fortress | [fortress](https://github.com/gazebosim/gz-usd/tree/fortress) |
-Garden and higher versions | [main](https://github.com/gazebosim/gz-usd) |
+# gz-usd | SDF ↔ USD converter
 
 USD is a high-performance extensible software platform for collaboratively constructing animated 3D
 scenes, designed to meet the needs of large-scale film and visual effects production.
 
 This repo provides tools to convert between SDF and USD files.
 
+> [!CAUTION]
+> This converter has been only tested on Ubuntu 20.04. It is expected to work as well on Ubuntu 22.04
 **USD requires CMAKE 3.12; this package is available from Ubuntu 20.04**
 
-# Tutorials
+## Tutorials
 
 If you have already installed `gz-usd` you might want to visit [the tutorial section](./tutorials/README.md).
 
-# Requirements
+## Limitations
+Before using this package, please be aware of the current limitations.
 
-You will need all of the dependencies for sdformat, along with the following additional dependencies:
-* [USD](https://github.com/PixarAnimationStudios/USD/tree/v21.11#getting-and-building-the-code):
-    Note: USD support is only available when building sdformat from source. USD requires CMAKE 3.12 this package is available from Ubuntu 20.0.
+- Textures cannot be imported directly
+- Relative path fails frequently, so absolute paths are advisable​.
+- Inertial parameters are not imported directly.
+- COLLADA files which counts with multiple `polylist` sections might be ommited and selected only one.
+- Parsed configurations are not supported. You will have to merge everything into only one .std file.
+- Objects which are dowloaded via [app.gazebosim.org](app.gazebosim.org) might not work.
 
-    Clone the USD repository
+## Requirements
+
+You will need all of the dependencies for sdformat, along with the following additional dependencies
+
+| System  | Version |
+| ------------- | ------------- |
+| Ubuntu | 20.04 (Focal Fossa) |
+| Gazebo | Garden |
+| Cmake | >=3.12 |
+| OpenUSD | v21.11 |
+
+Here you have more detailed instructions about how to setup your environment.
+
+* [Gazebo Garden](https://gazebosim.org/docs/garden/install_ubuntu):
+
+> [!NOTE]  
+> You can follow the [official instructions](https://gazebosim.org/docs/garden/install_ubuntu) as well.
+
+1. Install some necessary tools
     ```bash
-    git clone --depth 1 -b v21.11 https://github.com/PixarAnimationStudios/USD.git
+    $ sudo apt-get update
+    $ sudo apt-get install lsb-release wget gnupg
     ```
-    Note: Only v21.11 supported currently
 
-    Install dependencies not managed by the build script
+2. Install Gazebo Garden
+    ```bash
+    $ sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
+    $ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
+    $ sudo apt-get update
+    $ sudo apt-get install gz-garden
+    ```
+
+* [OpenUSD](https://github.com/PixarAnimationStudios/OpenUSD/releases/tag/v21.11):
+
+> [!IMPORTANT]  
+> USD requires at least CMAKE 3.12 to compile it.
+
+> [!NOTE]  
+> You can follow the [official instructions](https://github.com/PixarAnimationStudios/OpenUSD/tree/v21.11#getting-and-building-the-code) as well.
+
+1. Clone the USD repository
+    ```bash
+    $ git clone --depth 1 -b v21.11 https://github.com/PixarAnimationStudios/OpenUSD
+    ```
+
+2. Install dependencies to compile OpenUSD
 
     ```bash
-    sudo apt install libpyside2-dev python3-opengl cmake libglu1-mesa-dev freeglut3-dev mesa-common-dev
+    $ sudo apt install -y python3-opengl cmake libglu1-mesa-dev freeglut3-dev mesa-common-dev
+    $ python3 -m pip install pyside2
     ```
-    Use the build script to compile USD. In order to speed up compilation, it is recommended to disable unneeded components.
-    ```bash
-    cd USD
-    python3 build_scripts/build_usd.py --build-variant release --no-tests --no-examples --no-tutorials --no-docs --no-python <install_dir>
-    ```
-    For more information regarding the build options, see the USD docs at https://github.com/PixarAnimationStudios/USD/tree/v21.11#getting-and-building-the-code.
+3. Use the build script to compile USD.
 
-    Add USD to system paths (replace <install_dir> with the path to your USD install directory)
+> [!TIP]  
+> In order to speed up compilation, it is recommended to disable unneeded components.
 
     ```bash
-    export PATH=<install_dir>/bin:$PATH
-    export LD_LIBRARY_PATH=<install_dir>/lib:$LD_LIBRARY_PATH
-    export CMAKE_PREFIX_PATH=<install_dir>:$CMAKE_PREFIX_PATH
+    $ python3 OpenUSD/build_scripts/build_usd.py --build-variant release --no-tests --no-examples --no-tutorials --no-docs --no-python -j$(($(grep -c "^processor" /proc/cpuinfo) - 1)) <install_dir>
     ```
-* [gz-usd](https://github.com/gazebosim/gz-usd)
-* [sdformat](https://github.com/gazebosim/sdformat)
+> [!NOTE]  
+> If your system collapses during compilation, try reducing the number of cores in the `-j/--jobs` flag.
 
-# Setup
+4. Add USD to system paths `~/.bashrc` (replace <install_dir> with the path to your USD install directory).
 
-Build `gz-usd`. The steps below follow a traditional cmake build, but `gz-usd`
-can also be built with [colcon](https://colcon.readthedocs.io/en/released/index.html):
+    ```bash
+    export PATH=<install_dir>/bin${PATH:+:${PATH}}
+    export LD_LIBRARY_PATH=<install_dir>/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+    export CMAKE_PREFIX_PATH=<install_dir>${CMAKE_PREFIX_PATH:+:${CMAKE_PREFIX_PATH}}
+    export PYTHONPATH=<install_dir>/lib/python${PYTHONPATH:+:${PYTHONPATH}}
+    ```
 
-**Note: Be sure to build gz-usd on a terminal with the above environment variables exported.**
+5. Reaload your envirment to reflec the changes.
 
-```bash
-git clone https://github.com/gazebosim/gz-usd
-cd gz-usd
-mkdir build
-cd build
-cmake ..
-make
-```
+    ```bash
+    $ source ~/.bashrc
+    ```
 
-You should now have an executable named `sdf2usd` in the `./build/bin` directory.
-This executable can be used to convert a SDF world file to a USD file.
-To see how the executable works, run the following command from the `./build/bin` directory:
-```bash
-./sdf2usd -h
-```
+* [gz-usd](#Setup)
+
+## Setup
+
+Follow the steps below in order to build `gz-usd` by traditional cmake build.
+
+> [!NOTE]  
+> Be sure to build gz-usd on a terminal with the above environment variables exported.
+
+1. Clone the gz-usd repository.
+    ```bash
+    $ git clone https://github.com/MrKeith99/gz-usd
+    ```
+
+2. Change directory.
+    ```bash
+    $ cd gz-usd
+    ```
+
+3. Create a `build` folder.
+    ```bash
+    $ mkdir build
+    ```
+
+4. Change directory.
+    ```bash
+    $ cd build
+    ```
+
+5. Setup the compiler.
+    ```bash
+    $ cmake ..
+    ```
+
+    6. Start the compiler.
+    ```bash
+    $ make
+    ```
 
 
-### Note about building with colcon
+You can also build `gz-usd`with [colcon]([https://colcon.readthedocs.io/en/released/index.html](https://colcon.readthedocs.io/en/released/user/installation.html#using-pip-on-any-platform)):
 
-You may need to add the USD library path to your `LD_LIBRARY_PATH` environment variable after sourcing the colcon workspace.
-If the USD library path is not a part of `LD_LIBRARY_PATH`, you will probably see the following error when running the `sdf2usd` executable:
+> [!NOTE]  
+> You can use the `pip` installation method to avoid any installation problems.
 
-```bash
-sdf2usd: error while loading shared libraries: libusd_usd.so: cannot open shared object file: No such file or directory
-```
+1. Clone the gz-usd repository.
+    ```bash
+    $ git clone https://github.com/MrKeith99/gz-usd
+    ```
 
-The typical USD library path is `<usd_installation_path>/lib`.
-So, if you installed USD at `/usr/local/USD`, the following command on Linux properly updates the `LD_LIBRARY_PATH` environment variable:
-```bash
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/USD/lib
-```
+2. Change directory.
+    ```bash
+    $ cd gz-usd
+    ```
 
-Another thing to note if building with colcon is that after sourcing the workspace with sdformat,
-the `sdf2usd` executable can be run without having to go to the `./build/bin` directory.
-So, instead of going to that directory and running `./sdf2usd ...`, you should be able to run `sdf2usd ...` from anywhere.
+3. Start the compiler.
+    ```bash
+    $ colcon build
+    ```
 
-## ROSCon 2022
+## Usage
+
+You should now have an executable named `sdf2usd` and `usd2sdf` in the `<install_dir>/build/bin` directory.
+These executable can be used to convert a SDF world file to a USD file and viceversa.
+To see how the executable works, run the following command from the `<install_dir>/build/bin` directory:
+
+1. Change directory.
+    ```bash
+    $ cd <install_dir>/build/bin
+    # if colcon: cd <install_dir>/build/gz-usd0/bin
+    ```
+
+2. Check how to use the command with `--help` flag.
+    ```bash
+    $ ./sdf2usd -h
+    # or: ./usd2sdf -h
+    ```
+    
+> [!NOTE]  
+> To understand better how to use each command, please visit [the tutorial section](./tutorials/README.md).
+
+### ROSCon 2022
 
 [![](img/video_img.png)](https://vimeo.com/767140085)
