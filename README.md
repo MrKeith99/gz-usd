@@ -1,4 +1,4 @@
-# gz-usd | SDF <-> USD converter
+# gz-usd | SDF ↔ USD converter
 
 USD is a high-performance extensible software platform for collaboratively constructing animated 3D
 scenes, designed to meet the needs of large-scale film and visual effects production.
@@ -12,6 +12,16 @@ This repo provides tools to convert between SDF and USD files.
 ## Tutorials
 
 If you have already installed `gz-usd` you might want to visit [the tutorial section](./tutorials/README.md).
+
+## Limitations
+Before using this package, please be aware of the current limitations.
+
+- Textures cannot be imported directly
+- Relative path fails frequently, so absolute paths are advisable​.
+- Inertial parameters are not imported directly.
+- COLLADA files which counts with multiple `polylist` sections might be ommited and selected only one.
+- Parsed configurations are not supported. You will have to merge everything into only one .std file.
+- Objects which are dowloaded via [app.gazebosim.org](app.gazebosim.org) might not work.
 
 ## Requirements
 
