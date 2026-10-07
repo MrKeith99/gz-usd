@@ -86,6 +86,7 @@ TEST_F(UsdStageFixture, World)
   // were parsed correctly
   auto worldPrim = this->stage->GetPrimAtPath(pxr::SdfPath(worldPath));
   ASSERT_TRUE(worldPrim);
+  EXPECT_EQ(worldPrim, this->stage->GetDefaultPrim());
   auto physicsScene = pxr::UsdPhysicsScene::Get(this->stage,
       pxr::SdfPath(worldPath + "/physics"));
   ASSERT_TRUE(physicsScene);

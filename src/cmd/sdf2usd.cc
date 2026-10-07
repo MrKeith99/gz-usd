@@ -347,6 +347,7 @@ void runCommand(const Options &_opt)
           std::cout << e << "\n";
         exit(-5);
       }
+      stage->SetDefaultPrim(stage->GetPrimAtPath(pxr::SdfPath(modelPath)));
 
       if (!stage->GetRootLayer()->Export(_opt.outputFilename))
       {

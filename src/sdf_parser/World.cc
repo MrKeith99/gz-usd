@@ -61,6 +61,7 @@ namespace usd
 
     const pxr::SdfPath worldPrimPath(_path);
     auto usdWorldPrim = _stage->DefinePrim(worldPrimPath);
+    _stage->SetDefaultPrim(usdWorldPrim);
 
     auto usdPhysics = pxr::UsdPhysicsScene::Define(_stage,
         pxr::SdfPath(_path + "/physics"));
