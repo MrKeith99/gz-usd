@@ -29,12 +29,14 @@
 // included.
 #pragma push_macro ("__DEPRECATED")
 #undef __DEPRECATED
+#include <pxr/base/gf/vec2f.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/vt/array.h>
 #include <pxr/usd/usdGeom/capsule.h>
 #include <pxr/usd/usdGeom/cube.h>
 #include <pxr/usd/usdGeom/cylinder.h>
 #include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/usdGeom/primvarsAPI.h>
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdPhysics/collisionAPI.h>
 #include <pxr/usd/usdPhysics/meshCollisionAPI.h>
@@ -175,19 +177,40 @@ TEST_F(UsdStageFixture, Geometry)
   const auto groundPlaneGeometry = this->stage->GetPrimAtPath(
     pxr::SdfPath(groundPlaneGeometryPath));
   ASSERT_TRUE(groundPlaneGeometry);
-  const auto usdGroundPlane = pxr::UsdGeomCube(groundPlaneGeometry);
+  // the visual of a plane is a textured quad on top of the collision box
+  const auto usdGroundPlane = pxr::UsdGeomMesh(groundPlaneGeometry);
   ASSERT_TRUE(usdGroundPlane);
-  usdGroundPlane.GetSizeAttr().Get(&size);
-  EXPECT_DOUBLE_EQ(1.0, size);
-  auto scaleAttr =
-    groundPlaneGeometry.GetAttribute(pxr::TfToken("xformOp:scale"));
+  pxr::VtArray<pxr::GfVec3f> planePoints;
+  EXPECT_TRUE(usdGroundPlane.GetPointsAttr().Get(&planePoints));
+  ASSERT_EQ(4u, planePoints.size());
+  EXPECT_EQ(pxr::GfVec3f(-1, -2, 0.125), planePoints[0]);
+  EXPECT_EQ(pxr::GfVec3f(1, 2, 0.125), planePoints[2]);
+  pxr::VtArray<pxr::GfVec3f> planeNormals;
+  EXPECT_TRUE(usdGroundPlane.GetNormalsAttr().Get(&planeNormals));
+  ASSERT_EQ(4u, planeNormals.size());
+  EXPECT_EQ(pxr::GfVec3f(0, 0, 1), planeNormals[0]);
+  pxr::VtArray<int> planeCounts;
+  EXPECT_TRUE(usdGroundPlane.GetFaceVertexCountsAttr().Get(&planeCounts));
+  EXPECT_EQ(1u, planeCounts.size());
+  const auto planeSt =
+    pxr::UsdGeomPrimvarsAPI(usdGroundPlane).GetPrimvar(pxr::TfToken("st"));
+  ASSERT_TRUE(planeSt);
+  pxr::VtArray<pxr::GfVec2f> planeUvs;
+  EXPECT_TRUE(planeSt.Get(&planeUvs));
+  EXPECT_EQ(4u, planeUvs.size());
+  usdGroundPlane.GetExtentAttr().Get(&extent);
+  this->CheckExtent(extent, planePoints[0], planePoints[2]);
+  extent.clear();
+
+  // the collision keeps the thin box
+  const auto usdGroundPlaneCollision =
+    pxr::UsdGeomCube(groundPlaneCollisionGeometry);
+  ASSERT_TRUE(usdGroundPlaneCollision);
+  auto scaleAttr = groundPlaneCollisionGeometry.GetAttribute(
+    pxr::TfToken("xformOp:scale"));
   ASSERT_TRUE(scaleAttr);
   scaleAttr.Get(&scale);
-  EXPECT_EQ(pxr::GfVec3f(2, 4, 0.25), scale);
-  gz::usd::testing::HasScaleXFormOp(groundPlaneGeometry);
-  usdGroundPlane.GetExtentAttr().Get(&extent);
-  this->CheckExtent(extent, pxr::GfVec3f(-0.5), pxr::GfVec3f(0.5));
-  extent.clear();
+  EXPECT_EQ(pxr::GfVec3f(1.4, 6.3, 0.25), scale);
 
   const std::string boxPath = worldPath + "/box";
   const std::string boxLinkPath = boxPath + "/link";

@@ -52,6 +52,7 @@
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/scope.h>
 #include <pxr/usd/usdGeom/sphere.h>
+#include <pxr/usd/usdGeom/tokens.h>
 #include <pxr/usd/usdGeom/xform.h>
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
 #include <pxr/usd/usdShade/material.h>
@@ -638,17 +639,67 @@ namespace usd
     return errors;
   }
 
+  /// \brief Create a quad mesh with UVs for a SDF plane. A mesh is used
+  /// instead of the thin box of the collision so that textures can be mapped.
+  /// The quad lies on the top face of the thin box.
+  /// \param[in] _plane The SDF plane
+  /// \param[in] _stage The stage that will contain the quad
+  /// \param[in] _path Where the quad should exist in _stage
+  /// \return gz::usd::UsdErrors, which is a vector of UsdError objects.
+  gz::usd::UsdErrors ParseSdfPlaneQuad(const sdf::Plane &_plane,
+    pxr::UsdStageRefPtr &_stage, const std::string &_path)
+  {
+    gz::usd::UsdErrors errors;
+
+    auto usdMesh = pxr::UsdGeomMesh::Define(_stage, pxr::SdfPath(_path));
+    if (!usdMesh)
+    {
+      errors.push_back(UsdError(
+        gz::usd::UsdErrorCode::FAILED_USD_DEFINITION,
+        "Unable to define a USD plane mesh at path [" + _path + "]"));
+      return errors;
+    }
+
+    const float x = static_cast<float>(_plane.Size().X()) * 0.5f;
+    const float y = static_cast<float>(_plane.Size().Y()) * 0.5f;
+    const float z = static_cast<float>(usd::kPlaneThickness) * 0.5f;
+    const pxr::VtArray<pxr::GfVec3f> points = {
+      pxr::GfVec3f(-x, -y, z), pxr::GfVec3f(x, -y, z),
+      pxr::GfVec3f(x, y, z), pxr::GfVec3f(-x, y, z)};
+
+    usdMesh.CreatePointsAttr().Set(points);
+    usdMesh.CreateFaceVertexCountsAttr().Set(pxr::VtArray<int>{4});
+    usdMesh.CreateFaceVertexIndicesAttr().Set(pxr::VtArray<int>{0, 1, 2, 3});
+    usdMesh.CreateNormalsAttr().Set(pxr::VtArray<pxr::GfVec3f>(
+      4, pxr::GfVec3f(0, 0, 1)));
+    usdMesh.SetNormalsInterpolation(pxr::UsdGeomTokens->vertex);
+    usdMesh.CreateSubdivisionSchemeAttr(pxr::VtValue(pxr::TfToken("none")));
+    usdMesh.CreateExtentAttr().Set(
+      pxr::VtArray<pxr::GfVec3f>{points[0], points[2]});
+
+    auto st = pxr::UsdGeomPrimvarsAPI(usdMesh).CreatePrimvar(
+      pxr::TfToken("st"), pxr::SdfValueTypeNames->Float2Array,
+      pxr::UsdGeomTokens->vertex);
+    st.Set(pxr::VtArray<pxr::GfVec2f>{
+      pxr::GfVec2f(0, 0), pxr::GfVec2f(1, 0),
+      pxr::GfVec2f(1, 1), pxr::GfVec2f(0, 1)});
+
+    return errors;
+  }
+
   /// \brief Parse a SDF plane geometry into a USD plane geometry
   /// \param[in] _geometry The SDF plane geometry
   /// \param[in] _stage The stage that will contain the parsed USD equivalent
   /// of _geometry
   /// \param[in] _path Where the parsed USD equivalent of _geometry should exist
   /// in _stage
+  /// \param[in] _visual True to create a textured quad, false to create the
+  /// thin box used for collisions
   /// \return gz::usd::UsdErrors, which is a vector of UsdError objects.
   /// Each UsdError includes an error code and message. An empty vector
   /// indicates no error occurred when creating the USD equivalent of _geometry
   gz::usd::UsdErrors ParseSdfPlaneGeometry(const sdf::Geometry &_geometry,
-    pxr::UsdStageRefPtr &_stage, const std::string &_path)
+    pxr::UsdStageRefPtr &_stage, const std::string &_path, bool _visual)
   {
     gz::usd::UsdErrors errors;
 
@@ -671,6 +722,9 @@ namespace usd
               "Only planes with a unit z vector normal are supported.")));
       return errors;
     }
+
+    if (_visual)
+      return ParseSdfPlaneQuad(*sdfPlane, _stage, _path);
 
     sdf::Box box;
     box.SetSize(math::Vector3d(
@@ -725,7 +779,7 @@ namespace usd
   }
 
   gz::usd::UsdErrors ParseSdfGeometry(const sdf::Geometry &_geometry,
-    pxr::UsdStageRefPtr &_stage, const std::string &_path)
+    pxr::UsdStageRefPtr &_stage, const std::string &_path, bool _visual)
   {
     gz::usd::UsdErrors errors;
     switch (_geometry.Type())
@@ -749,7 +803,7 @@ namespace usd
         errors = ParseSdfCapsuleGeometry(_geometry, _stage, _path);
         break;
       case sdf::GeometryType::PLANE:
-        errors = ParseSdfPlaneGeometry(_geometry, _stage, _path);
+        errors = ParseSdfPlaneGeometry(_geometry, _stage, _path, _visual);
         break;
       case sdf::GeometryType::ELLIPSOID:
         errors = ParseSdfEllipsoid(_geometry, _stage, _path);

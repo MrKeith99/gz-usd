@@ -83,7 +83,8 @@ namespace usd
     const auto geometry = *(_visual.Geom());
     auto geometryPath = std::string(_path + "/geometry");
     geometryPath = gz::usd::validPath(geometryPath);
-    auto geomErrors = ParseSdfGeometry(geometry, _stage, geometryPath);
+    auto geomErrors = ParseSdfGeometry(geometry, _stage, geometryPath,
+        true);
     if (!geomErrors.empty())
     {
       errors.insert(errors.end(), geomErrors.begin(), geomErrors.end());
