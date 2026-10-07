@@ -101,13 +101,16 @@ TEST_F(UsdStageFixture, Link)
   std::string boxPath = worldPath + "/" + "box";
   auto box = this->stage->GetPrimAtPath(pxr::SdfPath(boxPath));
   ASSERT_TRUE(box);
-  EXPECT_TRUE(box.HasAPI<pxr::UsdPhysicsRigidBodyAPI>());
+  // the links are the rigid bodies, not the model prim
+  EXPECT_FALSE(box.HasAPI<pxr::UsdPhysicsRigidBodyAPI>());
   gz::usd::testing::CheckPrimPose(box,
       math::Pose3d(
         math::Vector3d(0, 0, 2.5),
         math::Quaterniond(0, 0, 0)));
   std::string boxLinkPath = boxPath + "/" + "link";
   auto boxLink = this->stage->GetPrimAtPath(pxr::SdfPath(boxLinkPath));
+  ASSERT_TRUE(boxLink);
+  EXPECT_TRUE(boxLink.HasAPI<pxr::UsdPhysicsRigidBodyAPI>());
   ASSERT_TRUE(boxLink);
   gz::usd::testing::CheckInertial(
     boxLink, 1, pxr::GfVec3f(1, 1, 1), pxr::GfQuatf(1, 0, 0, 0),
@@ -120,7 +123,8 @@ TEST_F(UsdStageFixture, Link)
   std::string cylinderPath = worldPath + "/" + "cylinder";
   auto cylinder = this->stage->GetPrimAtPath(pxr::SdfPath(cylinderPath));
   ASSERT_TRUE(cylinder);
-  EXPECT_TRUE(cylinder.HasAPI<pxr::UsdPhysicsRigidBodyAPI>());
+  // the links are the rigid bodies, not the model prim
+  EXPECT_FALSE(cylinder.HasAPI<pxr::UsdPhysicsRigidBodyAPI>());
   gz::usd::testing::CheckPrimPose(cylinder,
       math::Pose3d(
         math::Vector3d(2, 0, 2.5),
@@ -140,7 +144,8 @@ TEST_F(UsdStageFixture, Link)
   std::string spherePath = worldPath + "/" + "sphere";
   auto sphere = this->stage->GetPrimAtPath(pxr::SdfPath(spherePath));
   ASSERT_TRUE(sphere);
-  EXPECT_TRUE(sphere.HasAPI<pxr::UsdPhysicsRigidBodyAPI>());
+  // the links are the rigid bodies, not the model prim
+  EXPECT_FALSE(sphere.HasAPI<pxr::UsdPhysicsRigidBodyAPI>());
   gz::usd::testing::CheckPrimPose(sphere,
       math::Pose3d(
         math::Vector3d(4, 0, 2.5),
@@ -159,7 +164,8 @@ TEST_F(UsdStageFixture, Link)
   std::string capsulePath = worldPath + "/" + "capsule";
   auto capsule = this->stage->GetPrimAtPath(pxr::SdfPath(capsulePath));
   ASSERT_TRUE(capsule);
-  EXPECT_TRUE(capsule.HasAPI<pxr::UsdPhysicsRigidBodyAPI>());
+  // the links are the rigid bodies, not the model prim
+  EXPECT_FALSE(capsule.HasAPI<pxr::UsdPhysicsRigidBodyAPI>());
   gz::usd::testing::CheckPrimPose(capsule,
       math::Pose3d(
         math::Vector3d(6, 0, 2.5),
@@ -178,7 +184,8 @@ TEST_F(UsdStageFixture, Link)
   std::string meshPath = worldPath + "/" + "mesh";
   auto mesh = this->stage->GetPrimAtPath(pxr::SdfPath(meshPath));
   ASSERT_TRUE(mesh);
-  EXPECT_TRUE(mesh.HasAPI<pxr::UsdPhysicsRigidBodyAPI>());
+  // the links are the rigid bodies, not the model prim
+  EXPECT_FALSE(mesh.HasAPI<pxr::UsdPhysicsRigidBodyAPI>());
   gz::usd::testing::CheckPrimPose(mesh,
       math::Pose3d(
         math::Vector3d(8, 0, 2.5),
