@@ -18,6 +18,7 @@
 #include "Collision.hh"
 
 #include <string>
+#include <vector>
 
 #include <gz/math/Pose3.hh>
 
@@ -29,8 +30,11 @@
 #undef __DEPRECATED
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usd/stage.h>
+#include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/xform.h>
 #include <pxr/usd/usdPhysics/collisionAPI.h>
+#include <pxr/usd/usdPhysics/meshCollisionAPI.h>
+#include <pxr/usd/usdPhysics/tokens.h>
 #include <pxr/usd/usdShade/connectableAPI.h>
 #include <pxr/usd/usdShade/materialBindingAPI.h>
 #pragma pop_macro ("__DEPRECATED")
@@ -48,7 +52,7 @@ inline namespace GZ_USD_VERSION_NAMESPACE {
 namespace usd
 {
   gz::usd::UsdErrors ParseSdfCollision(const sdf::Collision &_collision,
-      pxr::UsdStageRefPtr &_stage, const std::string &_path)
+      pxr::UsdStageRefPtr &_stage, const std::string &_path, bool _rigidBody)
   {
     gz::usd::UsdErrors errors;
     const pxr::SdfPath sdfCollisionPath(_path);
@@ -119,13 +123,49 @@ namespace usd
       return errors;
     }
 
-    if (!pxr::UsdPhysicsCollisionAPI::Apply(geomPrim))
+    // Mesh geometries are a Scope with one UsdGeomMesh per submesh, and the
+    // collision schemas must be applied to the meshes. PhysX can only use
+    // exact triangle meshes on static bodies.
+    std::vector<pxr::UsdPrim> collisionPrims;
+    if (geometry.Type() == sdf::GeometryType::MESH)
     {
-      errors.push_back(UsdError(
-        gz::usd::UsdErrorCode::FAILED_PRIM_API_APPLY,
-        "Internal error: unable to apply a collision to the prim at path ["
-        + geometryPath + "]"));
-      return errors;
+      for (const auto &child : geomPrim.GetChildren())
+      {
+        if (child.IsA<pxr::UsdGeomMesh>())
+          collisionPrims.push_back(child);
+      }
+    }
+    else
+    {
+      collisionPrims.push_back(geomPrim);
+    }
+
+    for (const auto &prim : collisionPrims)
+    {
+      if (!pxr::UsdPhysicsCollisionAPI::Apply(prim))
+      {
+        errors.push_back(UsdError(
+          gz::usd::UsdErrorCode::FAILED_PRIM_API_APPLY,
+          "Internal error: unable to apply a collision to the prim at path ["
+          + prim.GetPath().GetString() + "]"));
+        return errors;
+      }
+
+      if (geometry.Type() == sdf::GeometryType::MESH)
+      {
+        auto meshCollision = pxr::UsdPhysicsMeshCollisionAPI::Apply(prim);
+        if (!meshCollision)
+        {
+          errors.push_back(UsdError(
+            gz::usd::UsdErrorCode::FAILED_PRIM_API_APPLY,
+            "Internal error: unable to apply a mesh collision to the prim "
+            "at path [" + prim.GetPath().GetString() + "]"));
+          return errors;
+        }
+        meshCollision.CreateApproximationAttr().Set(_rigidBody ?
+            pxr::UsdPhysicsTokens->convexDecomposition :
+            pxr::UsdPhysicsTokens->none);
+      }
     }
 
     if (auto surface = _collision.Surface())

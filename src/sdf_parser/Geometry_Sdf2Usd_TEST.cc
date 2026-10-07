@@ -16,6 +16,8 @@
  */
 
 #include <string>
+#include <utility>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -35,6 +37,7 @@
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdPhysics/collisionAPI.h>
+#include <pxr/usd/usdPhysics/meshCollisionAPI.h>
 #include <pxr/usd/usd/stage.h>
 #pragma pop_macro ("__DEPRECATED")
 
@@ -326,4 +329,36 @@ TEST_F(UsdStageFixture, Geometry)
   pxr::TfToken subdivisionScheme;
   usdMesh.GetSubdivisionSchemeAttr().Get(&subdivisionScheme);
   EXPECT_EQ(pxr::TfToken("none"), subdivisionScheme);
+}
+
+/////////////////////////////////////////////////
+TEST_F(UsdStageFixture, MeshCollisionApproximation)
+{
+  const auto testFile = gz::testing::TestFile("sdf", "mesh_collision.sdf");
+
+  sdf::Root root;
+  ASSERT_TRUE(gz::testing::LoadSdfFile(testFile, root));
+  ASSERT_EQ(1u, root.WorldCount());
+  const auto world = root.WorldByIndex(0u);
+
+  const auto worldPath = std::string("/" + world->Name());
+  const auto usdErrors = gz::usd::ParseSdfWorld(*world, stage, worldPath);
+  EXPECT_TRUE(usdErrors.empty());
+
+  const std::vector<std::pair<std::string, pxr::TfToken>> models = {
+    {"static_mesh", pxr::TfToken("none")},
+    {"dynamic_mesh", pxr::TfToken("convexDecomposition")}};
+  for (const auto &[name, approximation] : models)
+  {
+    const auto meshPrim = this->stage->GetPrimAtPath(pxr::SdfPath(
+      worldPath + "/" + name + "/link/collision/geometry/Cube"));
+    ASSERT_TRUE(meshPrim);
+    EXPECT_TRUE(meshPrim.HasAPI<pxr::UsdPhysicsCollisionAPI>());
+    ASSERT_TRUE(meshPrim.HasAPI<pxr::UsdPhysicsMeshCollisionAPI>());
+
+    pxr::TfToken value;
+    EXPECT_TRUE(pxr::UsdPhysicsMeshCollisionAPI(meshPrim)
+        .GetApproximationAttr().Get(&value));
+    EXPECT_EQ(approximation, value);
+  }
 }

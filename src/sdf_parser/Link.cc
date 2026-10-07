@@ -156,7 +156,7 @@ namespace usd
       auto collisionPath = std::string(_path + "/" + collision.Name());
       collisionPath = gz::usd::validPath(collisionPath);
       auto errorsCollision = ParseSdfCollision(collision, _stage,
-          collisionPath);
+          collisionPath, _rigidBody);
       if (!errorsCollision.empty())
       {
         errors.insert(errors.end(), errorsCollision.begin(),

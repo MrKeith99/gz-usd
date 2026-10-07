@@ -46,13 +46,17 @@ namespace gz
     /// of _collision.
     /// \param[in] _path The USD path of the parsed collision in _stage,
     /// which must be a valid USD path.
+    /// \param[in] _rigidBody Whether the collision belongs to a rigid body
+    /// (i.e., non-static). Mesh collisions of rigid bodies use a convex
+    /// decomposition, while static ones keep the exact mesh.
     /// \return gz::usd::UsdErrors, which is a vector of UsdError objects.
     /// Each UsdError includes an error code and message. An empty vector
     /// indicates no error.
     gz::usd::UsdErrors ParseSdfCollision(
         const sdf::Collision &_collision,
         pxr::UsdStageRefPtr &_stage,
-        const std::string &_path);
+        const std::string &_path,
+        bool _rigidBody);
   }
   }
 }
