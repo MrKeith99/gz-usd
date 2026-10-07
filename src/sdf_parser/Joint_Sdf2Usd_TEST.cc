@@ -314,7 +314,7 @@ TEST_F(UsdJointStageFixture, RevoluteJoints)
     float usdDamping;
     EXPECT_TRUE(dampingAttr.Get(&usdDamping));
     EXPECT_FLOAT_EQ(usdDamping,
-        static_cast<float>(sdfJoint->Axis()->Damping()));
+        static_cast<float>(sdfJoint->Axis()->Damping() * GZ_DTOR(1.0)));
 
     // check stiffness
     const auto stiffnessAttr =
@@ -323,7 +323,8 @@ TEST_F(UsdJointStageFixture, RevoluteJoints)
     float usdStiffness;
     EXPECT_TRUE(stiffnessAttr.Get(&usdStiffness));
     EXPECT_FLOAT_EQ(usdStiffness,
-        static_cast<float>(sdfJoint->Axis()->SpringStiffness()));
+        static_cast<float>(sdfJoint->Axis()->SpringStiffness() *
+          GZ_DTOR(1.0)));
 
     // the default effort (-1) must not become a max force
     const auto maxForceAttr =
@@ -366,6 +367,27 @@ TEST_F(UsdJointStageFixture, RevoluteJointWithoutDynamicsHasNoDrive)
     checkedJoints++;
   }
   EXPECT_EQ(checkedJoints, 1);
+}
+
+/////////////////////////////////////////////////
+TEST_F(UsdJointStageFixture, RevoluteDriveGainsArePerDegree)
+{
+  this->GenerateUSD(gz::testing::TestFile("sdf", "revolute_drive.sdf"));
+
+  const auto prim = this->stage->GetPrimAtPath(
+    pxr::SdfPath(this->modelPath + "/hinge"));
+  ASSERT_TRUE(prim);
+  ASSERT_TRUE(prim.HasAPI<pxr::UsdPhysicsDriveAPI>(pxr::TfToken("angular")));
+
+  const auto drive =
+    pxr::UsdPhysicsDriveAPI::Get(prim, pxr::TfToken("angular"));
+  float value;
+  EXPECT_TRUE(drive.GetDampingAttr().Get(&value));
+  EXPECT_NEAR(0.05236f, value, 1e-5);
+  EXPECT_TRUE(drive.GetStiffnessAttr().Get(&value));
+  EXPECT_NEAR(0.034907f, value, 1e-5);
+  EXPECT_TRUE(drive.GetMaxForceAttr().Get(&value));
+  EXPECT_FLOAT_EQ(50.0f, value);
 }
 
 /////////////////////////////////////////////////

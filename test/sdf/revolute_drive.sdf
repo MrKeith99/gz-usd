@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="revolute_drive">
+    <link name="base"/>
+    <link name="arm">
+      <pose>0 0 1 0 0 0</pose>
+    </link>
+    <joint name="hinge" type="revolute">
+      <parent>base</parent>
+      <child>arm</child>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <dynamics>
+          <damping>3</damping>
+          <spring_stiffness>2</spring_stiffness>
+        </dynamics>
+        <limit>
+          <lower>-1</lower>
+          <upper>1</upper>
+          <effort>50</effort>
+        </limit>
+      </axis>
+    </joint>
+  </model>
+</sdf>

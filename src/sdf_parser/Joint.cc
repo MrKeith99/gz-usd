@@ -252,9 +252,11 @@ namespace usd
         return errors;
       }
 
-      drive.CreateDampingAttr().Set(static_cast<float>(axis->Damping()));
+      // USD angular drive gains are per degree, SDF's are per radian
+      drive.CreateDampingAttr().Set(
+          static_cast<float>(axis->Damping() * GZ_DTOR(1.0)));
       drive.CreateStiffnessAttr().Set(
-          static_cast<float>(axis->SpringStiffness()));
+          static_cast<float>(axis->SpringStiffness() * GZ_DTOR(1.0)));
       // SDF effort -1 means unlimited
       if (axis->Effort() >= 0 && std::isfinite(axis->Effort()))
         drive.CreateMaxForceAttr().Set(static_cast<float>(axis->Effort()));
