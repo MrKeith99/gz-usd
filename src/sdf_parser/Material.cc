@@ -32,11 +32,13 @@
 // included.
 #pragma push_macro ("__DEPRECATED")
 #undef __DEPRECATED
+#include <pxr/base/gf/vec3f.h>
 #include <pxr/base/tf/stringUtils.h>
 #include <pxr/usd/sdf/types.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usdShade/connectableAPI.h>
 #include <pxr/usd/usdShade/materialBindingAPI.h>
+#include <pxr/usd/usdShade/shader.h>
 #pragma pop_macro ("__DEPRECATED")
 
 #include "sdf/Pbr.hh"
@@ -189,6 +191,78 @@ namespace usd
       attr.SetColorSpace(_colorSpace);
     }
     return errors;
+  }
+
+  //////////////////////////////////////////////////
+  /// \brief Add a UsdPreviewSurface network to a material so that renderers
+  /// that do not support MDL (e.g., usdview, Newton) can display it.
+  /// \param[in] _stage The stage that contains _material
+  /// \param[in] _material The USD material to extend
+  /// \param[in] _sdf The SDF material
+  /// \param[in] _albedo Albedo texture path relative to the stage. Empty if
+  /// the material has no texture.
+  /// \param[in] _roughness Roughness of the material
+  /// \param[in] _metallic Metalness of the material
+  void CreatePreviewSurface(pxr::UsdStageRefPtr &_stage,
+      pxr::UsdShadeMaterial &_material, const sdf::Material &_sdf,
+      const std::string &_albedo, float _roughness, float _metallic)
+  {
+    const auto materialPath = _material.GetPath();
+    auto preview = pxr::UsdShadeShader::Define(
+      _stage, materialPath.AppendChild(pxr::TfToken("PreviewSurface")));
+    preview.CreateIdAttr().Set(pxr::TfToken("UsdPreviewSurface"));
+
+    const auto diffuse = _sdf.Diffuse();
+    auto diffuseInput = preview.CreateInput(
+      pxr::TfToken("diffuseColor"), pxr::SdfValueTypeNames->Color3f);
+    if (_albedo.empty())
+    {
+      diffuseInput.Set(pxr::GfVec3f(diffuse.R(), diffuse.G(), diffuse.B()));
+    }
+    else
+    {
+      auto reader = pxr::UsdShadeShader::Define(
+        _stage, materialPath.AppendChild(pxr::TfToken("stReader")));
+      reader.CreateIdAttr().Set(pxr::TfToken("UsdPrimvarReader_float2"));
+      reader.CreateInput(pxr::TfToken("varname"),
+          pxr::SdfValueTypeNames->String).Set(std::string("st"));
+      auto readerOut = reader.CreateOutput(
+        pxr::TfToken("result"), pxr::SdfValueTypeNames->Float2);
+
+      auto texture = pxr::UsdShadeShader::Define(
+        _stage, materialPath.AppendChild(pxr::TfToken("AlbedoTexture")));
+      texture.CreateIdAttr().Set(pxr::TfToken("UsdUVTexture"));
+      texture.CreateInput(pxr::TfToken("file"),
+          pxr::SdfValueTypeNames->Asset).Set(pxr::SdfAssetPath(_albedo));
+      texture.CreateInput(pxr::TfToken("st"),
+          pxr::SdfValueTypeNames->Float2).ConnectToSource(readerOut);
+      texture.CreateInput(pxr::TfToken("wrapS"),
+          pxr::SdfValueTypeNames->Token).Set(pxr::TfToken("repeat"));
+      texture.CreateInput(pxr::TfToken("wrapT"),
+          pxr::SdfValueTypeNames->Token).Set(pxr::TfToken("repeat"));
+      texture.CreateInput(pxr::TfToken("sourceColorSpace"),
+          pxr::SdfValueTypeNames->Token).Set(pxr::TfToken("sRGB"));
+      diffuseInput.ConnectToSource(texture.CreateOutput(
+        pxr::TfToken("rgb"), pxr::SdfValueTypeNames->Float3));
+    }
+
+    preview.CreateInput(pxr::TfToken("roughness"),
+        pxr::SdfValueTypeNames->Float).Set(_roughness);
+    preview.CreateInput(pxr::TfToken("metallic"),
+        pxr::SdfValueTypeNames->Float).Set(_metallic);
+    preview.CreateInput(pxr::TfToken("opacity"),
+        pxr::SdfValueTypeNames->Float).Set(static_cast<float>(diffuse.A()));
+
+    const auto emissive = _sdf.Emissive();
+    if (emissive.A() > 0)
+    {
+      preview.CreateInput(pxr::TfToken("emissiveColor"),
+          pxr::SdfValueTypeNames->Color3f).Set(
+          pxr::GfVec3f(emissive.R(), emissive.G(), emissive.B()));
+    }
+
+    _material.CreateSurfaceOutput().ConnectToSource(preview.CreateOutput(
+      pxr::TfToken("surface"), pxr::SdfValueTypeNames->Token));
   }
 
   gz::usd::UsdErrors ParseSdfMaterial(const sdf::Material *_materialSdf,
@@ -360,6 +434,9 @@ namespace usd
       return errors;
     }
 
+    std::string albedoPath;
+    float roughness = 0.5f;
+    float metallic = 0.0f;
     const sdf::Pbr * pbr = _materialSdf->PbrMaterial();
     if (pbr)
     {
@@ -372,6 +449,8 @@ namespace usd
 
       if (pbrWorkflow)
       {
+        metallic = static_cast<float>(pbrWorkflow->Metalness());
+        roughness = static_cast<float>(pbrWorkflow->Roughness());
         const std::map<pxr::TfToken, pxr::VtValue> customDataMetallicConstant =
         {
           {pxr::TfToken("default"), pxr::VtValue(0.5)},
@@ -435,6 +514,7 @@ namespace usd
         {
           const std::string copyPath =
             CopyTexture(*_materialSdf, pbrWorkflow->AlbedoMap());
+          albedoPath = copyPath;
 
           auto errorsMaterialDiffuseTexture =
             CreateMaterialInput<pxr::SdfAssetPath>(
@@ -576,6 +656,9 @@ namespace usd
         }
       }
     }
+
+    CreatePreviewSurface(_stage, materialUsd, *_materialSdf, albedoPath,
+        roughness, metallic);
 
     return errors;
   }

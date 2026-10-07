@@ -17,6 +17,10 @@
 
 #include <gtest/gtest.h>
 
+#include <fstream>
+#include <string>
+
+#include <gz/common/Filesystem.hh>
 #include <gz/common/Material.hh>
 #include <gz/common/Util.hh>
 
@@ -26,7 +30,9 @@
 // included.
 #pragma push_macro ("__DEPRECATED")
 #undef __DEPRECATED
+#include <pxr/usd/usdShade/connectableAPI.h>
 #include <pxr/usd/usdShade/materialBindingAPI.h>
+#include <pxr/usd/usdShade/shader.h>
 #include <pxr/usd/usd/stage.h>
 #pragma pop_macro ("__DEPRECATED")
 
@@ -35,6 +41,7 @@
 #include "gz/usd/UsdError.hh"
 #include "gz/usd/sdf_parser/World.hh"
 #include "sdf/Material.hh"
+#include "sdf/Pbr.hh"
 #include "sdf/Root.hh"
 #include "test_config.h"
 #include "test_utils.hh"
@@ -313,4 +320,100 @@ TEST_F(UsdStageFixture, Material)
       pxr::GfVec3f(0.12, 0.23, 0.34),
       false);
   }
+}
+
+/////////////////////////////////////////////////
+TEST_F(UsdStageFixture, PreviewSurfaceAndOutputDir)
+{
+  const auto outputDir =
+    gz::common::joinPaths(gz::common::cwd(), "material_output_dir_test");
+  gz::testing::ScopeExit cleanup(
+      [&outputDir]
+      {
+        gz::usd::SetTextureOutputDir("");
+        gz::common::removeAll(outputDir);
+      });
+  gz::common::createDirectories(outputDir);
+  gz::usd::SetTextureOutputDir(outputDir);
+
+  // a texture that lives outside of the output directory
+  const auto texture = gz::common::joinPaths(outputDir, "source_albedo.png");
+  {
+    std::ofstream file(texture);
+    file << "not a real png";
+  }
+  const auto copiedTexture = gz::common::joinPaths(
+    outputDir, "materials", "textures", "source_albedo.png");
+  EXPECT_FALSE(gz::common::exists(copiedTexture));
+
+  sdf::Material materialSdf;
+  materialSdf.SetDiffuse(gz::math::Color(0.2f, 0.4f, 0.6f, 0.5f));
+  sdf::Pbr pbr;
+  sdf::PbrWorkflow workflow;
+  workflow.SetType(sdf::PbrWorkflowType::METAL);
+  workflow.SetAlbedoMap(texture);
+  workflow.SetRoughness(0.3);
+  workflow.SetMetalness(0.7);
+  pbr.SetWorkflow(sdf::PbrWorkflowType::METAL, workflow);
+  materialSdf.SetPbrMaterial(pbr);
+
+  pxr::SdfPath materialPath;
+  EXPECT_TRUE(gz::usd::ParseSdfMaterial(
+    &materialSdf, stage, materialPath).empty());
+
+  // the file goes next to the output, the asset path is relative to it
+  EXPECT_TRUE(gz::common::exists(copiedTexture));
+  EXPECT_EQ(outputDir, gz::usd::TextureOutputDir());
+
+  const auto preview = pxr::UsdShadeShader(this->stage->GetPrimAtPath(
+    materialPath.AppendChild(pxr::TfToken("PreviewSurface"))));
+  ASSERT_TRUE(preview);
+  pxr::TfToken id;
+  EXPECT_TRUE(preview.GetIdAttr().Get(&id));
+  EXPECT_EQ(pxr::TfToken("UsdPreviewSurface"), id);
+
+  float value;
+  EXPECT_TRUE(preview.GetInput(pxr::TfToken("roughness")).Get(&value));
+  EXPECT_FLOAT_EQ(0.3f, value);
+  EXPECT_TRUE(preview.GetInput(pxr::TfToken("metallic")).Get(&value));
+  EXPECT_FLOAT_EQ(0.7f, value);
+  EXPECT_TRUE(preview.GetInput(pxr::TfToken("opacity")).Get(&value));
+  EXPECT_FLOAT_EQ(0.5f, value);
+
+  // diffuseColor is driven by the UV texture that reads the copied file
+  auto diffuse = preview.GetInput(pxr::TfToken("diffuseColor"));
+  ASSERT_TRUE(diffuse);
+  pxr::UsdShadeConnectableAPI source;
+  pxr::TfToken sourceName;
+  pxr::UsdShadeAttributeType sourceType;
+  ASSERT_TRUE(pxr::UsdShadeConnectableAPI::GetConnectedSource(
+    diffuse.GetAttr(), &source, &sourceName, &sourceType));
+  EXPECT_EQ(pxr::TfToken("rgb"), sourceName);
+  const auto uvTexture = pxr::UsdShadeShader(source.GetPrim());
+  ASSERT_TRUE(uvTexture);
+  EXPECT_TRUE(uvTexture.GetIdAttr().Get(&id));
+  EXPECT_EQ(pxr::TfToken("UsdUVTexture"), id);
+  pxr::SdfAssetPath file;
+  EXPECT_TRUE(uvTexture.GetInput(pxr::TfToken("file")).Get(&file));
+  EXPECT_EQ("materials/textures/source_albedo.png", file.GetAssetPath());
+
+  // the universal surface output is connected next to the mdl one
+  pxr::UsdShadeMaterial material(this->stage->GetPrimAtPath(materialPath));
+  ASSERT_TRUE(material);
+  EXPECT_TRUE(material.GetSurfaceOutput().HasConnectedSource());
+  EXPECT_TRUE(material.GetSurfaceOutput(pxr::TfToken("mdl"))
+      .HasConnectedSource());
+
+  // without a texture, diffuseColor is a constant
+  sdf::Material plainSdf;
+  plainSdf.SetDiffuse(gz::math::Color(0.1f, 0.2f, 0.3f, 1.0f));
+  pxr::SdfPath plainPath;
+  EXPECT_TRUE(gz::usd::ParseSdfMaterial(
+    &plainSdf, stage, plainPath).empty());
+  const auto plainPreview = pxr::UsdShadeShader(this->stage->GetPrimAtPath(
+    plainPath.AppendChild(pxr::TfToken("PreviewSurface"))));
+  ASSERT_TRUE(plainPreview);
+  pxr::GfVec3f color;
+  EXPECT_TRUE(plainPreview.GetInput(pxr::TfToken("diffuseColor")).Get(&color));
+  EXPECT_EQ(pxr::GfVec3f(0.1f, 0.2f, 0.3f), color);
 }
