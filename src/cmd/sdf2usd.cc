@@ -38,6 +38,7 @@
 #include "gz/usd/sdf_parser/World.hh"
 #include "../sdf_parser/Model.hh"
 #include "../UsdUtils.hh"
+#include "../sdf_parser/Light.hh"
 #include "../sdf_parser/Material.hh"
 
 //////////////////////////////////////////////////
@@ -62,6 +63,9 @@ struct Options
 
   /// \brief Directories used to resolve model:// URIs
   std::string modelPaths;
+
+  /// \brief Factor applied on top of the default light intensities
+  double lightIntensityScale{1.0};
 };
 
 //////////////////////////////////////////////////
@@ -276,6 +280,7 @@ void RegisterResourcePaths(const std::string &_modelPaths)
 void runCommand(const Options &_opt)
 {
   RegisterResourcePaths(_opt.modelPaths);
+  gz::usd::SetLightIntensityScale(_opt.lightIntensityScale);
   gz::usd::SetTextureOutputDir(gz::common::parentPath(_opt.outputFilename));
 
   // Configure SDF to fetch assets from Gazebo fuel.
@@ -406,6 +411,11 @@ void addFlags(CLI::App &_app)
   _app.add_option("output",
     opt->outputFilename,
     "Output filename. Defaults to output.usd unless otherwise specified.");
+
+  _app.add_option("--light-intensity-scale",
+    opt->lightIntensityScale,
+    "Factor applied on top of the default light intensities (1000 for "
+    "distant lights and 30000 for point and spot lights). Defaults to 1.0.");
 
   // Join keeps every occurrence to one value so that the positional
   // arguments are not swallowed. Values are joined with ':'.

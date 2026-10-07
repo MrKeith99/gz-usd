@@ -67,7 +67,9 @@ class UsdLightStageFixture : public ::testing::Test
   public: void CheckLightIntensity(const pxr::UsdPrim &_lightPrim,
               const sdf::Light &_sdfLight)
   {
-    const float targetIntensity = _sdfLight.Intensity() * 100.0f;
+    const float targetIntensity = _sdfLight.Type() ==
+      sdf::LightType::DIRECTIONAL ? _sdfLight.Intensity() * 1000.0f :
+      _sdfLight.Intensity() * 30000.0f;
 
     bool checkedIntensity = false;
     if (auto intensityAttr = _lightPrim.GetAttribute(pxr::TfToken("intensity")))
@@ -232,4 +234,19 @@ TEST_F(UsdLightStageFixture, Lights)
   EXPECT_EQ(2, numPointLights);
   EXPECT_EQ(2, numSpotLights);
   EXPECT_EQ(2, numDirectionalLights);
+}
+
+/////////////////////////////////////////////////
+TEST(UsdLightIntensity, Scale)
+{
+  sdf::Light light;
+  light.SetType(sdf::LightType::DIRECTIONAL);
+  light.SetIntensity(2.0);
+  EXPECT_FLOAT_EQ(2000.0f, gz::usd::LightIntensity(light));
+
+  gz::usd::SetLightIntensityScale(0.5);
+  EXPECT_FLOAT_EQ(1000.0f, gz::usd::LightIntensity(light));
+  light.SetType(sdf::LightType::POINT);
+  EXPECT_FLOAT_EQ(30000.0f, gz::usd::LightIntensity(light));
+  gz::usd::SetLightIntensityScale(1.0);
 }

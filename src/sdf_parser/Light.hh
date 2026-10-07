@@ -40,6 +40,18 @@ namespace gz
   //
   namespace usd
   {
+    /// \brief Set a factor applied on top of the USD light intensity, which
+    /// is already scaled to Isaac Sim's default light intensities.
+    /// \param[in] _scale Multiplier. 1.0 by default.
+    void GZ_USD_VISIBLE SetLightIntensityScale(double _scale);
+
+    /// \brief Get the USD intensity of a SDF light.
+    /// \param[in] _light The SDF light
+    /// \return The SDF intensity scaled to Isaac Sim's default intensities
+    /// (1000 for distant, 30000 for point and spot lights) and by the factor
+    /// set with SetLightIntensityScale.
+    float GZ_USD_VISIBLE LightIntensity(const sdf::Light &_light);
+
     /// \brief Parse an SDF light into a USD stage.
     /// \param[in] _light The SDF light to parse.
     /// \param[in] _stage The stage that should contain the USD representation

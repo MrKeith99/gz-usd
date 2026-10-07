@@ -47,6 +47,24 @@ inline namespace GZ_USD_VERSION_NAMESPACE {
 //
 namespace usd
 {
+  /// \brief Factor applied on top of the default light intensities
+  static double gLightIntensityScale = 1.0;
+
+  //////////////////////////////////////////////////
+  void SetLightIntensityScale(double _scale)
+  {
+    gLightIntensityScale = _scale;
+  }
+
+  //////////////////////////////////////////////////
+  float LightIntensity(const sdf::Light &_light)
+  {
+    // Isaac Sim's default sun is 1000 to 3000 and its sphere light is 30000
+    const double base =
+      _light.Type() == sdf::LightType::DIRECTIONAL ? 1000.0 : 30000.0;
+    return static_cast<float>(base * _light.Intensity() * gLightIntensityScale);
+  }
+
   gz::usd::UsdErrors ParseSdfLight(const sdf::Light &_light,
       pxr::UsdStageRefPtr &_stage, const std::string &_path)
   {
@@ -106,8 +124,7 @@ namespace usd
     // UsdLuxLightAPI sets the light's "inputs:intensity" attribute, but isaac
     // sim reads the light's "intensity" attribute. Both inputs:intensity and
     // intensity are set to provide flexibility with other USD renderers
-    const float usdLightIntensity =
-      static_cast<float>(_light.Intensity()) * 100.0f;
+    const float usdLightIntensity = LightIntensity(_light);
     auto lightPrim = _stage->GetPrimAtPath(sdfLightPath);
     lightPrim.CreateAttribute(pxr::TfToken("intensity"),
         pxr::SdfValueTypeNames->Float, false).Set(usdLightIntensity);
