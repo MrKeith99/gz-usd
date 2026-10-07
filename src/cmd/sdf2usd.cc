@@ -16,7 +16,9 @@
  */
 
 #include <cctype>
+#include <cstdlib>
 #include <string>
+#include <vector>
 
 #include <gz/common/Filesystem.hh>
 #include <gz/common/Util.hh>
@@ -56,6 +58,9 @@ struct Options
 
   /// \brief output filename
   std::string outputFilename{"output.usd"};
+
+  /// \brief Directories used to resolve model:// URIs
+  std::string modelPaths;
 };
 
 //////////////////////////////////////////////////
@@ -209,8 +214,68 @@ std::string FindResourceUri(const gz::common::URI &_uri)
   return FindResources(_uri.Str());
 }
 
+//////////////////////////////////////////////////
+/// \brief Look for a model:// or relative URI inside a list of directories
+/// \param[in] _dirs Directories to search
+/// \param[in] _uri URI to find
+/// \return The full path to the file. Empty string if it was not found.
+std::string FindInDirs(const std::vector<std::string> &_dirs,
+  const gz::common::URI &_uri)
+{
+  const std::string str = _uri.Str();
+  const auto schemeEnd = str.find("://");
+  if (schemeEnd == std::string::npos || str.substr(0, schemeEnd) != "model")
+    return "";
+
+  const std::string relative = str.substr(schemeEnd + 3);
+  for (const auto &dir : _dirs)
+  {
+    const std::string candidate = gz::common::joinPaths(dir, relative);
+    if (gz::common::exists(candidate))
+      return candidate;
+  }
+  return "";
+}
+
+//////////////////////////////////////////////////
+/// \brief Collect the resource directories from --model-path, SDF_PATH and
+/// GZ_SIM_RESOURCE_PATH and register them to sdformat and gz-common.
+/// \param[in] _modelPaths Colon separated directories given in the command
+/// line
+void RegisterResourcePaths(const std::string &_modelPaths)
+{
+  std::vector<std::string> dirs;
+  for (const auto &dir : gz::common::split(_modelPaths, ":"))
+  {
+    if (!dir.empty())
+      dirs.push_back(dir);
+  }
+  for (const char *var : {"SDF_PATH", "GZ_SIM_RESOURCE_PATH"})
+  {
+    std::string value;
+    if (!gz::common::env(var, value, true))
+      continue;
+    for (const auto &dir : gz::common::split(value, ":"))
+    {
+      if (!dir.empty())
+        dirs.push_back(dir);
+    }
+  }
+
+  for (const auto &dir : dirs)
+    sdf::ParserConfig::GlobalConfig().AddURIPath("model://", dir);
+
+  gz::common::addFindFileURICallback(
+    [dirs](const gz::common::URI &_uri)
+    {
+      return FindInDirs(dirs, _uri);
+    });
+}
+
 void runCommand(const Options &_opt)
 {
+  RegisterResourcePaths(_opt.modelPaths);
+
   // Configure SDF to fetch assets from Gazebo fuel.
   sdf::setFindCallback(std::bind(&FindResources, std::placeholders::_1));
   gz::common::addFindFileURICallback(
@@ -337,6 +402,14 @@ void addFlags(CLI::App &_app)
   _app.add_option("output",
     opt->outputFilename,
     "Output filename. Defaults to output.usd unless otherwise specified.");
+
+  // Join keeps every occurrence to one value so that the positional
+  // arguments are not swallowed. Values are joined with ':'.
+  _app.add_option("--model-path",
+    opt->modelPaths,
+    "Directory used to resolve model:// URIs. Can be repeated. SDF_PATH and "
+    "GZ_SIM_RESOURCE_PATH are also used.")
+    ->delimiter(':')->multi_option_policy(CLI::MultiOptionPolicy::Join);
 
   _app.callback([&_app, opt](){
     runCommand(*opt);
