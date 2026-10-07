@@ -20,7 +20,10 @@
 #include <string>
 
 #include <gz/math/Pose3.hh>
+#include <gz/math/Quaternion.hh>
+#include <gz/math/Vector3.hh>
 
+#include <pxr/base/gf/vec3f.h>
 #include <pxr/base/tf/token.h>
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/sdf/types.h>
@@ -72,9 +75,6 @@ namespace usd
         return errors;
     }
 
-    // TODO(adlarkin) incorporate sdf::Light's <direction> somehow? According
-    // to the USD API, things like UsdLuxDistantLight and UsdLuxDiskLight emit
-    // light along the -Z axis, so I'm not sure if this can be changed.
     math::Pose3d pose;
     auto poseErrors = gz::usd::PoseWrtParent(_light, pose);
     if (!poseErrors.empty())
@@ -82,6 +82,13 @@ namespace usd
       for (const auto &e : poseErrors)
         errors.push_back(e);
       return errors;
+    }
+
+    // USD lights emit along their local -Z axis, SDF along <direction>
+    if (_light.Type() != sdf::LightType::POINT &&
+        _light.Direction().Length() > 0)
+    {
+      pose.Rot() = pose.Rot() * LightDirectionRotation(_light.Direction());
     }
 
     poseErrors = gz::usd::SetPose(pose, _stage, sdfLightPath);
@@ -106,13 +113,14 @@ namespace usd
         pxr::SdfValueTypeNames->Float, false).Set(usdLightIntensity);
     auto lightAPI = pxr::UsdLuxLightAPI(lightPrim);
     lightAPI.CreateIntensityAttr().Set(usdLightIntensity);
+    const auto diffuse = _light.Diffuse();
+    lightAPI.CreateColorAttr().Set(pxr::GfVec3f(
+      diffuse.R(), diffuse.G(), diffuse.B()));
 
     // TODO(adlarkin) Other things to look at (there may be more):
     // * exposure - I don't think SDF has this, but USD does. See the
     //    UsdLightAPI::GetExposureAttr method
-    // * diffuse, specular - USD takes it as a scalar multiplier,
-    //    SDF takes it as a RGB color vector. Perhaps this can be handled by
-    //    applying a material to a light
+    // * specular - USD takes it as a scalar multiplier, SDF as an RGB color
 
     return errors;
   }

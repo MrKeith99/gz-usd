@@ -153,6 +153,18 @@ namespace gz
       return errors;
     }
 
+    /// \brief Get the rotation that turns the emission axis of a USD light
+    /// (local -Z) into a SDF light direction.
+    /// \param[in] _direction The SDF light direction. Must not be zero.
+    /// \return The rotation from -Z to _direction
+    inline math::Quaterniond LightDirectionRotation(
+        const math::Vector3d &_direction)
+    {
+      math::Quaterniond rotation;
+      rotation.SetFrom2Axes(-math::Vector3d::UnitZ, _direction.Normalized());
+      return rotation;
+    }
+
     /// \brief Check if an sdf model is static and contains a single link that
     /// contains a single visual and single collision that both have a plane
     /// geometry.

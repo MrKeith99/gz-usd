@@ -21,16 +21,23 @@
 #include <unordered_map>
 
 #include <gz/math/Pose3.hh>
+#include <gz/math/Quaternion.hh>
+#include <gz/math/Vector3.hh>
 
 #pragma push_macro ("__DEPRECATED")
 #undef __DEPRECATED
+#include <pxr/base/gf/matrix4d.h>
+#include <pxr/base/gf/vec3d.h>
+#include <pxr/base/gf/vec3f.h>
 #include <pxr/base/tf/token.h>
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/primRange.h>
 #include <pxr/usd/usd/stage.h>
+#include <pxr/usd/usdGeom/xformable.h>
 #include <pxr/usd/usdLux/diskLight.h>
 #include <pxr/usd/usdLux/distantLight.h>
+#include <pxr/usd/usdLux/lightAPI.h>
 #include <pxr/usd/usdLux/sphereLight.h>
 #pragma pop_macro ("__DEPRECATED")
 
@@ -197,7 +204,29 @@ TEST_F(UsdLightStageFixture, Lights)
       math::Pose3d pose;
       const auto poseErrors = gz::usd::PoseWrtParent(lightSdf, pose);
       EXPECT_TRUE(poseErrors.empty());
+      if (lightSdf.Type() != sdf::LightType::POINT)
+      {
+        pose.Rot() = pose.Rot() *
+          gz::usd::LightDirectionRotation(lightSdf.Direction());
+      }
       gz::usd::testing::CheckPrimPose(lightUsd, pose);
+
+      // the light must emit along the SDF direction and keep its color
+      if (!lightUsd.IsA<pxr::UsdLuxSphereLight>())
+      {
+        const auto emitted = pxr::UsdGeomXformable(lightUsd)
+          .ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default())
+          .TransformDir(pxr::GfVec3d(0, 0, -1));
+        const auto direction = lightSdf.Direction().Normalized();
+        EXPECT_NEAR(emitted[0], direction.X(), 1e-5);
+        EXPECT_NEAR(emitted[1], direction.Y(), 1e-5);
+        EXPECT_NEAR(emitted[2], direction.Z(), 1e-5);
+      }
+      pxr::GfVec3f color;
+      EXPECT_TRUE(pxr::UsdLuxLightAPI(lightUsd).GetColorAttr().Get(&color));
+      EXPECT_FLOAT_EQ(color[0], lightSdf.Diffuse().R());
+      EXPECT_FLOAT_EQ(color[1], lightSdf.Diffuse().G());
+      EXPECT_FLOAT_EQ(color[2], lightSdf.Diffuse().B());
     }
   }
   EXPECT_EQ(2, numPointLights);
