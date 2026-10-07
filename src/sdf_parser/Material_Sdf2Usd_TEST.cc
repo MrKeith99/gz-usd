@@ -68,7 +68,7 @@ void CheckMaterial(
   pxr::GfVec3f emissiveColor {0, 0, 0};
 
   // PBR-specific values
-  const float _metallicConstant = 0.5;
+  const float _metallicConstant = 0;
   const bool _enableEmission = true;
 
   bool checkedDiffuse = false;
@@ -416,4 +416,39 @@ TEST_F(UsdStageFixture, PreviewSurfaceAndOutputDir)
   pxr::GfVec3f color;
   EXPECT_TRUE(plainPreview.GetInput(pxr::TfToken("diffuseColor")).Get(&color));
   EXPECT_EQ(pxr::GfVec3f(0.1f, 0.2f, 0.3f), color);
+}
+
+/////////////////////////////////////////////////
+TEST_F(UsdStageFixture, DefaultMetalnessIsZero)
+{
+  sdf::Material materialSdf;
+  sdf::Pbr pbr;
+  sdf::PbrWorkflow workflow;
+  workflow.SetType(sdf::PbrWorkflowType::METAL);
+  pbr.SetWorkflow(sdf::PbrWorkflowType::METAL, workflow);
+  materialSdf.SetPbrMaterial(pbr);
+
+  pxr::SdfPath path;
+  EXPECT_TRUE(gz::usd::ParseSdfMaterial(&materialSdf, stage, path).empty());
+
+  float value = -1;
+  const auto preview = pxr::UsdShadeShader(this->stage->GetPrimAtPath(
+    path.AppendChild(pxr::TfToken("PreviewSurface"))));
+  EXPECT_TRUE(preview.GetInput(pxr::TfToken("metallic")).Get(&value));
+  EXPECT_FLOAT_EQ(0.0f, value);
+
+  const auto mdl = pxr::UsdShadeShader(this->stage->GetPrimAtPath(
+    path.AppendChild(pxr::TfToken("Shader"))));
+  value = -1;
+  EXPECT_TRUE(mdl.GetInput(pxr::TfToken("metallic_constant")).Get(&value));
+  EXPECT_FLOAT_EQ(0.0f, value);
+
+  // without a pbr block there is no metallic input in the MDL shader
+  sdf::Material plain;
+  pxr::SdfPath plainPath;
+  EXPECT_TRUE(gz::usd::ParseSdfMaterial(&plain, stage, plainPath).empty());
+  const auto plainPreview = pxr::UsdShadeShader(this->stage->GetPrimAtPath(
+    plainPath.AppendChild(pxr::TfToken("PreviewSurface"))));
+  EXPECT_TRUE(plainPreview.GetInput(pxr::TfToken("metallic")).Get(&value));
+  EXPECT_FLOAT_EQ(0.0f, value);
 }

@@ -449,7 +449,11 @@ namespace usd
 
       if (pbrWorkflow)
       {
-        metallic = static_cast<float>(pbrWorkflow->Metalness());
+        // sdformat cannot tell an unset metalness from 0.5, and Gazebo
+        // renders materials without metalness as non-metal.
+        const double sdfMetalness = pbrWorkflow->Metalness();
+        metallic = sdfMetalness == 0.5 ? 0.0f :
+          static_cast<float>(sdfMetalness);
         roughness = static_cast<float>(pbrWorkflow->Roughness());
         const std::map<pxr::TfToken, pxr::VtValue> customDataMetallicConstant =
         {
@@ -461,7 +465,7 @@ namespace usd
           shaderPrim,
           "metallic_constant",
           pxr::SdfValueTypeNames->Float,
-          pbrWorkflow->Metalness(),
+          metallic,
           customDataMetallicConstant,
           pxr::TfToken("Metallic Amount"),
           pxr::TfToken("Reflectivity"),
