@@ -33,6 +33,7 @@
 #pragma push_macro ("__DEPRECATED")
 #undef __DEPRECATED
 #include <pxr/base/gf/vec3d.h>
+#include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usdGeom/tokens.h>
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
@@ -168,6 +169,19 @@ namespace gz
       _stage->SetMetadata(pxr::TfToken("metersPerUnit"), 1.0);
       _stage->SetStartTimeCode(0);
       _stage->SetTimeCodesPerSecond(24);
+    }
+
+    /// \brief Get the path of the scope that holds the materials. It is
+    /// inside the default prim so that it composes when the stage is
+    /// referenced from another one.
+    /// \param[in] _stage The stage that contains the materials
+    /// \return <default prim>/Looks, or /Looks if there is no default prim
+    inline pxr::SdfPath LooksPath(const pxr::UsdStageRefPtr &_stage)
+    {
+      const auto defaultPrim = _stage->GetDefaultPrim();
+      const auto root = defaultPrim ? defaultPrim.GetPath() :
+        pxr::SdfPath::AbsoluteRootPath();
+      return root.AppendChild(pxr::TfToken("Looks"));
     }
 
     /// \brief Get the rotation that turns the emission axis of a USD light

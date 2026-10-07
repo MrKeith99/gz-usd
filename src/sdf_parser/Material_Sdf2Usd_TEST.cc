@@ -292,7 +292,7 @@ TEST_F(UsdStageFixture, Material)
   EXPECT_TRUE(boundMesh.HasAPI<pxr::UsdShadeMaterialBindingAPI>());
 
   {
-    const std::string materialPath = "/Looks/Material_3";
+    const std::string materialPath = worldPath + "/Looks/Material_3";
     ASSERT_TRUE(this->stage->GetPrimAtPath(pxr::SdfPath(materialPath)));
 
     const std::string materialshaderPath = materialPath + "/Shader";
@@ -311,7 +311,7 @@ TEST_F(UsdStageFixture, Material)
   }
 
   {
-    const std::string materialPath = "/Looks/Material_1";
+    const std::string materialPath = worldPath + "/Looks/Material_1";
     ASSERT_TRUE(this->stage->GetPrimAtPath(pxr::SdfPath(materialPath)));
 
     const std::string materialshaderPath = materialPath + "/Shader";

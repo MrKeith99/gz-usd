@@ -173,7 +173,7 @@ namespace usd
       {
         if (auto ode = friction->ODE())
         {
-          const auto looksPath = pxr::SdfPath("/Looks");
+          const auto looksPath = LooksPath(_stage);
           auto looksPrim = _stage->GetPrimAtPath(looksPath);
           if (!looksPrim)
           {
@@ -184,8 +184,8 @@ namespace usd
           // collision with the names of the materials
           static int i = 0;
 
-          auto materialPath =
-            pxr::SdfPath("/Looks/MaterialPhysics_" + std::to_string(i));
+          auto materialPath = looksPath.AppendChild(
+            pxr::TfToken("MaterialPhysics_" + std::to_string(i)));
           i++;
 
           pxr::UsdShadeMaterial materialUsd;

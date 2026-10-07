@@ -148,7 +148,7 @@ TEST(check_cmd_model, GZ_UTILS_TEST_DISABLED_ON_WIN32(SDF))
 
     // check material physics
     const auto materialPhysicsPrim =
-      stage->GetPrimAtPath(pxr::SdfPath("/Looks/MaterialPhysics_0"));
+      stage->GetPrimAtPath(pxr::SdfPath("/ellipsoid/Looks/MaterialPhysics_0"));
     ASSERT_TRUE(materialPhysicsPrim);
     float floatAttrVal;
     getAttr(materialPhysicsPrim, "physics:density", floatAttrVal);
@@ -179,6 +179,6 @@ TEST(check_cmd_model, GZ_UTILS_TEST_DISABLED_ON_WIN32(SDF))
     pxr::SdfPathVector paths;
     rel.GetTargets(&paths);
     ASSERT_EQ(1u, paths.size());
-    EXPECT_EQ(pxr::SdfPath("/Looks/MaterialPhysics_0"), paths[0]);
+    EXPECT_EQ(pxr::SdfPath("/ellipsoid/Looks/MaterialPhysics_0"), paths[0]);
   }
 }

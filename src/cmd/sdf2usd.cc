@@ -340,6 +340,8 @@ void runCommand(const Options &_opt)
       std::string modelName = model->Name();
       modelName = gz::usd::validPath(modelName);
       auto modelPath = std::string("/" + modelName);
+      stage->SetDefaultPrim(stage->DefinePrim(
+        pxr::SdfPath(modelPath), pxr::TfToken("Xform")));
       gz::usd::UsdErrors usdErrors = gz::usd::ParseSdfModel(
         *model,
         stage,
@@ -353,7 +355,6 @@ void runCommand(const Options &_opt)
           std::cout << e << "\n";
         exit(-5);
       }
-      stage->SetDefaultPrim(stage->GetPrimAtPath(pxr::SdfPath(modelPath)));
 
       if (!stage->GetRootLayer()->Export(_opt.outputFilename))
       {

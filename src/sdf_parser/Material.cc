@@ -43,6 +43,7 @@
 #pragma pop_macro ("__DEPRECATED")
 
 #include "sdf/Pbr.hh"
+#include "../UsdUtils.hh"
 
 namespace gz
 {
@@ -310,7 +311,7 @@ namespace usd
   {
     gz::usd::UsdErrors errors;
 
-    const auto looksPath = pxr::SdfPath("/Looks");
+    const auto looksPath = LooksPath(_stage);
     auto looksPrim = _stage->GetPrimAtPath(looksPath);
     if (!looksPrim)
     {
@@ -321,7 +322,8 @@ namespace usd
     // with the names of the materials
     static int i = 0;
 
-    _materialPath = pxr::SdfPath("/Looks/Material_" + std::to_string(i));
+    _materialPath = looksPath.AppendChild(
+      pxr::TfToken("Material_" + std::to_string(i)));
     i++;
 
     pxr::UsdShadeMaterial materialUsd;
