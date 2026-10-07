@@ -20,11 +20,13 @@
 #include <string>
 
 #include <cctype>
+#include <memory>
 
 #include <gz/common/Console.hh>
 #include <gz/common/Filesystem.hh>
 #include <gz/common/Image.hh>
 #include <gz/common/Material.hh>
+#include <gz/common/Pbr.hh>
 #include <gz/common/Mesh.hh>
 #include <gz/common/MeshManager.hh>
 #include <gz/common/Util.hh>
@@ -82,18 +84,21 @@ inline namespace GZ_USD_VERSION_NAMESPACE {
 namespace usd
 {
   //////////////////////////////////////////////////
-  /// \brief Write the image embedded in a mesh material (e.g., a texture
+  /// \brief Write an image embedded in a mesh material (e.g., a texture
   /// inside a GLB) to the output textures folder.
-  /// \param[in] _material Mesh material
+  /// \param[in] _data Embedded image. Can be null.
   /// \param[in] _meshFile File the mesh was loaded from
-  /// \param[in] _materialIndex Index of _material in the mesh
-  /// \return The path of the written image. Empty if the material has no
-  /// embedded image or it could not be written.
-  std::string SaveEmbeddedTexture(const gz::common::Material &_material,
-      const std::string &_meshFile, int _materialIndex)
+  /// \param[in] _materialIndex Index of the material in the mesh
+  /// \param[in] _suffix Suffix of the file name, before the extension
+  /// \return The path of the written image. Empty if there is no embedded
+  /// image or it could not be written.
+  std::string SaveEmbeddedTexture(
+      const std::shared_ptr<const gz::common::Image> &_data,
+      const std::string &_meshFile, int _materialIndex,
+      const std::string &_suffix)
   {
-    const auto data = _material.TextureData();
-    if (!data)
+    if (!_data ||
+        _data->PixelFormat() == gz::common::Image::UNKNOWN_PIXEL_FORMAT)
       return "";
 
     std::string name = gz::common::basename(_meshFile);
@@ -103,23 +108,34 @@ namespace usd
       if (!std::isalnum(static_cast<unsigned char>(c)))
         c = '_';
     }
-    name += "_" + std::to_string(_materialIndex) + ".png";
+    name += "_" + std::to_string(_materialIndex) + _suffix + ".png";
 
     const std::string file = TextureFilePath(name);
     gz::common::createDirectories(gz::common::parentPath(file));
 
     gz::common::Image image;
-    image.SetFromData(data->Data().data(), data->Width(), data->Height(),
-        data->PixelFormat());
+    image.SetFromData(_data->Data().data(), _data->Width(), _data->Height(),
+        _data->PixelFormat());
     image.SavePNG(file);
     return file;
   }
 
   //////////////////////////////////////////////////
-  /// \brief Point the albedo map of a material to a file
+  /// \brief Point the maps of a material to the extracted embedded textures
   /// \param[in,out] _material Material to modify
-  /// \param[in] _file Albedo map
-  void SetAlbedoMap(sdf::Material &_material, const std::string &_file)
+  /// \param[in] _albedo Albedo map file. If empty, the current map is only
+  /// removed when _dropAlbedo is set.
+  /// \param[in] _normal Normal map file. If empty, the current map is only
+  /// removed when _dropNormal is set.
+  /// \param[in] _dropAlbedo True if the albedo is an embedded image that
+  /// could not be written
+  /// \param[in] _dropNormal True if the normal map is an embedded image that
+  /// could not be written
+  /// \param[in] _dropMaps True to remove the roughness and metalness maps,
+  /// which are embedded images that are not exported
+  void SetEmbeddedMaps(sdf::Material &_material, const std::string &_albedo,
+      const std::string &_normal, bool _dropAlbedo, bool _dropNormal,
+      bool _dropMaps)
   {
     sdf::Pbr pbr;
     if (_material.PbrMaterial())
@@ -138,7 +154,15 @@ namespace usd
       type = sdf::PbrWorkflowType::SPECULAR;
     }
     workflow.SetType(type);
-    workflow.SetAlbedoMap(_file);
+    if (!_albedo.empty() || _dropAlbedo)
+      workflow.SetAlbedoMap(_albedo);
+    if (!_normal.empty() || _dropNormal)
+      workflow.SetNormalMap(_normal, workflow.NormalMapType());
+    if (_dropMaps)
+    {
+      workflow.SetRoughnessMap("");
+      workflow.SetMetalnessMap("");
+    }
     pbr.SetWorkflow(type, workflow);
     _material.SetPbrMaterial(pbr);
   }
@@ -546,10 +570,24 @@ namespace usd
       {
         const auto material = ignMesh->MaterialByIndex(materialIndex).get();
         sdf::Material materialSdf = gz::usd::convert(material);
-        const auto embeddedTexture =
-          SaveEmbeddedTexture(*material, fullName, materialIndex);
-        if (!embeddedTexture.empty())
-          SetAlbedoMap(materialSdf, embeddedTexture);
+        const auto *commonPbr = material->PbrMaterial();
+        const auto albedo = SaveEmbeddedTexture(
+          material->TextureData(), fullName, materialIndex, "");
+        const auto normal = commonPbr ? SaveEmbeddedTexture(
+          commonPbr->NormalMapData(), fullName, materialIndex, "_normal") : "";
+        // glTF packs roughness and metalness in one image whose channels do
+        // not match the USD inputs, so those maps are not exported
+        const bool dropMaps = commonPbr &&
+          (commonPbr->RoughnessMapData() || commonPbr->MetalnessMapData());
+        const bool dropAlbedo = material->TextureData() && albedo.empty();
+        const bool dropNormal =
+          commonPbr && commonPbr->NormalMapData() && normal.empty();
+        if (!albedo.empty() || !normal.empty() || dropAlbedo || dropNormal ||
+            dropMaps)
+        {
+          SetEmbeddedMaps(
+            materialSdf, albedo, normal, dropAlbedo, dropNormal, dropMaps);
+        }
         pxr::SdfPath materialPath;
         gz::usd::UsdErrors materialErrors = ParseSdfMaterial(
           &materialSdf, _stage, materialPath);

@@ -452,3 +452,57 @@ TEST_F(UsdStageFixture, DefaultMetalnessIsZero)
   EXPECT_TRUE(plainPreview.GetInput(pxr::TfToken("metallic")).Get(&value));
   EXPECT_FLOAT_EQ(0.0f, value);
 }
+
+/////////////////////////////////////////////////
+TEST_F(UsdStageFixture, NormalMapAndEmbeddedNames)
+{
+  const auto outputDir =
+    gz::common::joinPaths(gz::common::cwd(), "material_normal_dir_test");
+  gz::testing::ScopeExit cleanup(
+      [&outputDir]
+      {
+        gz::usd::SetTextureOutputDir("");
+        gz::common::removeAll(outputDir);
+      });
+  gz::common::createDirectories(outputDir);
+  gz::usd::SetTextureOutputDir(outputDir);
+
+  const auto normal = gz::common::joinPaths(outputDir, "mesh_0_normal.png");
+  {
+    std::ofstream file(normal);
+    file << "not a real png";
+  }
+
+  sdf::Material materialSdf;
+  sdf::Pbr pbr;
+  sdf::PbrWorkflow workflow;
+  workflow.SetType(sdf::PbrWorkflowType::METAL);
+  workflow.SetNormalMap(normal, sdf::NormalMapSpace::TANGENT);
+  // synthetic names of maps embedded in meshes are not looked up
+  workflow.SetRoughnessMap("model.glb#*0_Roughness");
+  pbr.SetWorkflow(sdf::PbrWorkflowType::METAL, workflow);
+  materialSdf.SetPbrMaterial(pbr);
+
+  pxr::SdfPath path;
+  EXPECT_TRUE(gz::usd::ParseSdfMaterial(&materialSdf, stage, path).empty());
+
+  const auto preview = pxr::UsdShadeShader(this->stage->GetPrimAtPath(
+    path.AppendChild(pxr::TfToken("PreviewSurface"))));
+  auto normalInput = preview.GetInput(pxr::TfToken("normal"));
+  ASSERT_TRUE(normalInput);
+  pxr::UsdShadeConnectableAPI source;
+  pxr::TfToken sourceName;
+  pxr::UsdShadeAttributeType sourceType;
+  ASSERT_TRUE(pxr::UsdShadeConnectableAPI::GetConnectedSource(
+    normalInput.GetAttr(), &source, &sourceName, &sourceType));
+  pxr::SdfAssetPath file;
+  EXPECT_TRUE(pxr::UsdShadeShader(source.GetPrim())
+      .GetInput(pxr::TfToken("file")).Get(&file));
+  EXPECT_EQ("materials/textures/mesh_0_normal.png", file.GetAssetPath());
+
+  const auto mdl = pxr::UsdShadeShader(this->stage->GetPrimAtPath(
+    path.AppendChild(pxr::TfToken("Shader"))));
+  EXPECT_TRUE(mdl.GetInput(pxr::TfToken("normalmap_texture")).Get(&file));
+  EXPECT_EQ("materials/textures/mesh_0_normal.png", file.GetAssetPath());
+  EXPECT_FALSE(mdl.GetInput(pxr::TfToken("reflectionroughness_texture")));
+}
