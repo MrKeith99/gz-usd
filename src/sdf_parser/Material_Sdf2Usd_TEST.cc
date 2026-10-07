@@ -286,6 +286,10 @@ TEST_F(UsdStageFixture, Material)
 
   const std::string meshGeometryPath = worldPath + "/mesh/link/visual/geometry";
   ASSERT_TRUE(this->stage->GetPrimAtPath(pxr::SdfPath(meshGeometryPath)));
+  const auto boundMesh = this->stage->GetPrimAtPath(
+    pxr::SdfPath(meshGeometryPath + "/Cube"));
+  ASSERT_TRUE(boundMesh);
+  EXPECT_TRUE(boundMesh.HasAPI<pxr::UsdShadeMaterialBindingAPI>());
 
   {
     const std::string materialPath = "/Looks/Material_3";

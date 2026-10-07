@@ -618,7 +618,8 @@ namespace usd
              || materialSdf.Specular() != math::Color(0, 0, 0, 1)
              || materialSdf.PbrMaterial()))
         {
-          pxr::UsdShadeMaterialBindingAPI(usdMesh).Bind(materialUSD);
+          pxr::UsdShadeMaterialBindingAPI::Apply(usdMesh.GetPrim())
+            .Bind(materialUSD);
         }
         else if (!materialUSD)
         {

@@ -122,7 +122,7 @@ namespace usd
             + "] to a pxr::UsdShadeMaterial."));
           return errors;
         }
-        pxr::UsdShadeMaterialBindingAPI(geomPrim).Bind(materialUSD);
+        pxr::UsdShadeMaterialBindingAPI::Apply(geomPrim).Bind(materialUSD);
       }
     }
     else

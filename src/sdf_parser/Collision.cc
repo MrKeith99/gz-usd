@@ -243,7 +243,7 @@ namespace usd
             pxr::TfToken("physXMaterial:restitutionCombineMode"),
             pxr::SdfValueTypeNames->Token, false).Set(pxr::TfToken("average"));
 
-          pxr::UsdShadeMaterialBindingAPI(geomPrim).Bind(materialUsd);
+          pxr::UsdShadeMaterialBindingAPI::Apply(geomPrim).Bind(materialUsd);
         }
       }
     }

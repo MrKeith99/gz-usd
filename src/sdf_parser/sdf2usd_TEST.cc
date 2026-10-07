@@ -35,6 +35,7 @@
 #include <pxr/usd/usdGeom/gprim.h>
 #include <pxr/usd/usdGeom/tokens.h>
 #include <pxr/usd/usdGeom/metrics.h>
+#include <pxr/usd/usdShade/materialBindingAPI.h>
 #pragma pop_macro ("__DEPRECATED")
 
 #ifdef _WIN32
@@ -170,6 +171,8 @@ TEST(check_cmd_model, GZ_UTILS_TEST_DISABLED_ON_WIN32(SDF))
     const auto collisionGeometryPrim = stage->GetPrimAtPath(
       pxr::SdfPath("/ellipsoid/ellipsoid_link/ellipsoid_collision/geometry"));
     ASSERT_TRUE(collisionGeometryPrim);
+    EXPECT_TRUE(
+      collisionGeometryPrim.HasAPI<pxr::UsdShadeMaterialBindingAPI>());
     const pxr::TfToken frictionRelKey("material:binding");
     ASSERT_TRUE(collisionGeometryPrim.HasRelationship(frictionRelKey));
     const auto rel = collisionGeometryPrim.GetRelationship(frictionRelKey);
