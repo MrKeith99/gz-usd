@@ -17,6 +17,7 @@
 
 #include "Joint.hh"
 
+#include <cmath>
 #include <sstream>
 
 #include <gz/math/Angle.hh>
@@ -235,23 +236,29 @@ namespace usd
     sdfLimitDegrees = static_cast<float>(GZ_RTOD(axis->Upper()));
     usdJoint.CreateUpperLimitAttr().Set(sdfLimitDegrees);
 
-    pxr::UsdPrim usdJointPrim = _stage->GetPrimAtPath(pxr::SdfPath(_path));
-
-    auto drive =
-      pxr::UsdPhysicsDriveAPI::Apply(usdJointPrim, pxr::TfToken("angular"));
-    if (!drive)
+    // A drive with zero stiffness holds the joint at its target velocity,
+    // so only add one when SDF asks for damping or a spring.
+    if (axis->Damping() > 0 || axis->SpringStiffness() > 0)
     {
-      errors.push_back(UsdError(
-        gz::usd::UsdErrorCode::FAILED_PRIM_API_APPLY,
-        "Internal error: unable to mark link at path [" + _path +
-        "] as a UsdPhysicsDriveAPI."));
-      return errors;
-    }
+      pxr::UsdPrim usdJointPrim = _stage->GetPrimAtPath(pxr::SdfPath(_path));
+      auto drive =
+        pxr::UsdPhysicsDriveAPI::Apply(usdJointPrim, pxr::TfToken("angular"));
+      if (!drive)
+      {
+        errors.push_back(UsdError(
+          gz::usd::UsdErrorCode::FAILED_PRIM_API_APPLY,
+          "Internal error: unable to mark link at path [" + _path +
+          "] as a UsdPhysicsDriveAPI."));
+        return errors;
+      }
 
-    // TODO(ahcorde) Review damping and stiffness values
-    drive.CreateDampingAttr().Set(static_cast<float>(axis->Damping()));
-    drive.CreateStiffnessAttr().Set(static_cast<float>(axis->Stiffness()));
-    drive.CreateMaxForceAttr().Set(static_cast<float>(axis->Effort()));
+      drive.CreateDampingAttr().Set(static_cast<float>(axis->Damping()));
+      drive.CreateStiffnessAttr().Set(
+          static_cast<float>(axis->SpringStiffness()));
+      // SDF effort -1 means unlimited
+      if (axis->Effort() >= 0 && std::isfinite(axis->Effort()))
+        drive.CreateMaxForceAttr().Set(static_cast<float>(axis->Effort()));
+    }
 
     return errors;
   }

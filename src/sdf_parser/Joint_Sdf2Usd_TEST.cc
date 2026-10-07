@@ -323,15 +323,12 @@ TEST_F(UsdJointStageFixture, RevoluteJoints)
     float usdStiffness;
     EXPECT_TRUE(stiffnessAttr.Get(&usdStiffness));
     EXPECT_FLOAT_EQ(usdStiffness,
-        static_cast<float>(sdfJoint->Axis()->Stiffness()));
+        static_cast<float>(sdfJoint->Axis()->SpringStiffness()));
 
-    // check max force/effort
+    // the default effort (-1) must not become a max force
     const auto maxForceAttr =
       prim.GetAttribute(pxr::TfToken(driveApiAttrPrefix + "maxForce"));
-    ASSERT_TRUE(maxForceAttr);
-    float usdForce;
-    EXPECT_TRUE(maxForceAttr.Get(&usdForce));
-    EXPECT_FLOAT_EQ(usdForce, static_cast<float>(sdfJoint->Axis()->Effort()));
+    EXPECT_TRUE(!maxForceAttr || !maxForceAttr.HasAuthoredValue());
 
     checkedJoints++;
   }
@@ -343,6 +340,32 @@ TEST_F(UsdJointStageFixture, RevoluteJoints)
     this->stage->GetPrimAtPath(pxr::SdfPath(this->modelPath));
   ASSERT_TRUE(modelPrim);
   EXPECT_TRUE(modelPrim.HasAPI<pxr::UsdPhysicsArticulationRootAPI>());
+}
+
+/////////////////////////////////////////////////
+TEST_F(UsdJointStageFixture, RevoluteJointWithoutDynamicsHasNoDrive)
+{
+  this->GenerateUSD(gz::testing::TestFile("sdf", "revolute_no_drive.sdf"));
+
+  int checkedJoints = 0;
+  for (const auto & prim : this->stage->Traverse())
+  {
+    if (!prim.IsA<pxr::UsdPhysicsRevoluteJoint>())
+      continue;
+
+    EXPECT_FALSE(prim.HasAPI<pxr::UsdPhysicsDriveAPI>(
+          pxr::TfToken("angular")));
+
+    const auto usdJoint =
+      pxr::UsdPhysicsRevoluteJoint::Get(this->stage, prim.GetPath());
+    const auto *axis = this->model->JointByIndex(0)->Axis();
+    this->VerifyJointLimits(usdJoint,
+        static_cast<float>(axis->Lower()),
+        static_cast<float>(axis->Upper()),
+        true);
+    checkedJoints++;
+  }
+  EXPECT_EQ(checkedJoints, 1);
 }
 
 /////////////////////////////////////////////////

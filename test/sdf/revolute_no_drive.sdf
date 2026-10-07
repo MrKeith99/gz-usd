@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="revolute_no_drive">
+    <link name="base"/>
+    <link name="arm">
+      <pose>0 0 1 0 0 0</pose>
+    </link>
+    <joint name="hinge" type="revolute">
+      <parent>base</parent>
+      <child>arm</child>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>-0.785398163397</lower>
+          <upper>0.785398163397</upper>
+        </limit>
+      </axis>
+    </joint>
+  </model>
+</sdf>
