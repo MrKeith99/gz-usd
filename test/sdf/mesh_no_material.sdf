@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <world name="no_material_world">
+    <model name="stl_model">
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <mesh>
+              <uri>file://triangle.stl</uri>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>file://triangle.stl</uri>
+            </mesh>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+  </world>
+</sdf>

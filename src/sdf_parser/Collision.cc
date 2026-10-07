@@ -123,9 +123,8 @@ namespace usd
       return errors;
     }
 
-    // Mesh geometries are a Scope with one UsdGeomMesh per submesh, and the
-    // collision schemas must be applied to the meshes. PhysX can only use
-    // exact triangle meshes on static bodies.
+    // Collision schemas go on the per-submesh meshes, not the Scope. PhysX
+    // only supports exact triangle meshes on static bodies.
     std::vector<pxr::UsdPrim> collisionPrims;
     if (geometry.Type() == sdf::GeometryType::MESH)
     {

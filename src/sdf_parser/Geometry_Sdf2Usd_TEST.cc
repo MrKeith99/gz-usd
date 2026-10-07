@@ -39,6 +39,7 @@
 #include <pxr/usd/usdGeom/primvarsAPI.h>
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdPhysics/collisionAPI.h>
+#include <pxr/usd/usdShade/materialBindingAPI.h>
 #include <pxr/usd/usdPhysics/meshCollisionAPI.h>
 #include <pxr/usd/usd/primRange.h>
 #include <pxr/usd/usd/stage.h>
@@ -391,5 +392,41 @@ TEST_F(UsdStageFixture, MeshCollisionApproximation)
   {
     EXPECT_EQ(std::string::npos,
         prim.GetPath().GetName().find("Material_"));
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(UsdStageFixture, MeshWithoutMaterial)
+{
+  sdf::setFindCallback(gz::usd::testing::findFileCb);
+  gz::common::addFindFileURICallback(
+    std::bind(&gz::usd::testing::FindResourceUri, std::placeholders::_1));
+  const auto testFile = gz::testing::TestFile("sdf", "mesh_no_material.sdf");
+
+  sdf::Root root;
+  ASSERT_TRUE(gz::testing::LoadSdfFile(testFile, root));
+  const auto world = root.WorldByIndex(0u);
+
+  const auto worldPath = std::string("/" + world->Name());
+  const auto usdErrors = gz::usd::ParseSdfWorld(*world, stage, worldPath);
+  EXPECT_TRUE(usdErrors.empty());
+
+  // STL submeshes have no material: meshes exist without a visual material
+  const auto link = worldPath + "/stl_model/link";
+  for (const auto &part : {"/visual/geometry", "/collision/geometry"})
+  {
+    const auto geometry = this->stage->GetPrimAtPath(
+      pxr::SdfPath(link + part));
+    ASSERT_TRUE(geometry);
+    ASSERT_FALSE(geometry.GetChildren().empty());
+    for (const auto &child : geometry.GetChildren())
+    {
+      EXPECT_TRUE(child.IsA<pxr::UsdGeomMesh>());
+      // collisions may still bind their physics material
+      const auto bound =
+        pxr::UsdShadeMaterialBindingAPI(child).ComputeBoundMaterial();
+      EXPECT_EQ(std::string::npos,
+          bound.GetPath().GetName().find("Material_"));
+    }
   }
 }

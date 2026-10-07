@@ -539,7 +539,9 @@ namespace usd
       // TODO(adlarkin) update this call in sdf13 to avoid casting the index to
       // an int:
       // https://github.com/gazebosim/gz-common/pull/319
-      int materialIndex = subMesh->GetMaterialIndex().value();
+      const auto optionalMaterialIndex = subMesh->GetMaterialIndex();
+      const int materialIndex =
+        optionalMaterialIndex.has_value() ? optionalMaterialIndex.value() : -1;
       if (_visual && materialIndex != -1)
       {
         const auto material = ignMesh->MaterialByIndex(materialIndex).get();
