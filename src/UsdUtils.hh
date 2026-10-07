@@ -34,6 +34,7 @@
 #undef __DEPRECATED
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/usd/usd/stage.h>
+#include <pxr/usd/usdGeom/tokens.h>
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
 #pragma pop_macro ("__DEPRECATED")
 
@@ -155,6 +156,18 @@ namespace gz
             math::Angle(rotation.Yaw()).Degree()));
 
       return errors;
+    }
+
+    /// \brief Set the stage metadata shared by world and model conversions:
+    /// Z up, meters and the time codes.
+    /// \param[in,out] _stage The stage to configure
+    inline void SetupStage(pxr::UsdStageRefPtr &_stage)
+    {
+      _stage->SetMetadata(pxr::UsdGeomTokens->upAxis, pxr::UsdGeomTokens->z);
+      _stage->SetEndTimeCode(100);
+      _stage->SetMetadata(pxr::TfToken("metersPerUnit"), 1.0);
+      _stage->SetStartTimeCode(0);
+      _stage->SetTimeCodesPerSecond(24);
     }
 
     /// \brief Get the rotation that turns the emission axis of a USD light

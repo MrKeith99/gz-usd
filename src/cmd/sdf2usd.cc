@@ -331,6 +331,7 @@ void runCommand(const Options &_opt)
       }
 
       auto stage = pxr::UsdStage::CreateInMemory();
+      gz::usd::SetupStage(stage);
       std::string modelName = model->Name();
       modelName = gz::usd::validPath(modelName);
       auto modelPath = std::string("/" + modelName);

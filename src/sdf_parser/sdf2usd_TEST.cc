@@ -33,6 +33,8 @@
 #undef __DEPRECATED
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usdGeom/gprim.h>
+#include <pxr/usd/usdGeom/tokens.h>
+#include <pxr/usd/usdGeom/metrics.h>
 #pragma pop_macro ("__DEPRECATED")
 
 #ifdef _WIN32
@@ -131,6 +133,9 @@ TEST(check_cmd_model, GZ_UTILS_TEST_DISABLED_ON_WIN32(SDF))
 
     const auto stage = pxr::UsdStage::Open(outputUsdFilePath);
     ASSERT_TRUE(stage);
+
+    EXPECT_EQ(pxr::UsdGeomTokens->z, pxr::UsdGeomGetStageUpAxis(stage));
+    EXPECT_DOUBLE_EQ(1.0, pxr::UsdGeomGetStageMetersPerUnit(stage));
 
     ASSERT_TRUE(stage->GetPrimAtPath(pxr::SdfPath("/ellipsoid")));
     ASSERT_TRUE(stage->GetPrimAtPath(
