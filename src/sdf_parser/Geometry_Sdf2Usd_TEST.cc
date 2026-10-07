@@ -40,6 +40,7 @@
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdPhysics/collisionAPI.h>
 #include <pxr/usd/usdPhysics/meshCollisionAPI.h>
+#include <pxr/usd/usd/primRange.h>
 #include <pxr/usd/usd/stage.h>
 #pragma pop_macro ("__DEPRECATED")
 
@@ -383,5 +384,12 @@ TEST_F(UsdStageFixture, MeshCollisionApproximation)
     EXPECT_TRUE(pxr::UsdPhysicsMeshCollisionAPI(meshPrim)
         .GetApproximationAttr().Get(&value));
     EXPECT_EQ(approximation, value);
+  }
+
+  // collision-only meshes do not get visual materials
+  for (const auto &prim : this->stage->Traverse())
+  {
+    EXPECT_EQ(std::string::npos,
+        prim.GetPath().GetName().find("Material_"));
   }
 }

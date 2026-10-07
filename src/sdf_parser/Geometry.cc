@@ -322,11 +322,13 @@ namespace usd
   /// of _geometry
   /// \param[in] _path Where the parsed USD equivalent of _geometry should exist
   /// in _stage
+  /// \param[in] _visual True if the mesh belongs to a visual. Materials are
+  /// only converted for visuals.
   /// \return gz::usd::UsdErrors, which is a vector of UsdError objects.
   /// Each UsdError includes an error code and message. An empty vector
   /// indicates no error occurred when creating the USD equivalent of _geometry
   gz::usd::UsdErrors ParseSdfMeshGeometry(const sdf::Geometry &_geometry,
-    pxr::UsdStageRefPtr &_stage, const std::string &_path)
+    pxr::UsdStageRefPtr &_stage, const std::string &_path, bool _visual)
   {
     gz::usd::UsdErrors errors;
 
@@ -538,7 +540,7 @@ namespace usd
       // an int:
       // https://github.com/gazebosim/gz-common/pull/319
       int materialIndex = subMesh->GetMaterialIndex().value();
-      if (materialIndex != -1)
+      if (_visual && materialIndex != -1)
       {
         const auto material = ignMesh->MaterialByIndex(materialIndex).get();
         sdf::Material materialSdf = gz::usd::convert(material);
@@ -797,7 +799,7 @@ namespace usd
         errors = ParseSdfSphereGeometry(_geometry, _stage, _path);
         break;
       case sdf::GeometryType::MESH:
-        errors = ParseSdfMeshGeometry(_geometry, _stage, _path);
+        errors = ParseSdfMeshGeometry(_geometry, _stage, _path, _visual);
         break;
       case sdf::GeometryType::CAPSULE:
         errors = ParseSdfCapsuleGeometry(_geometry, _stage, _path);
