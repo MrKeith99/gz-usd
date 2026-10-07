@@ -29,6 +29,8 @@
 #include <pxr/usd/usdShade/material.h>
 #pragma pop_macro ("__DEPRECATED")
 
+#include <string>
+
 #include "sdf/Material.hh"
 #include "gz/usd/UsdError.hh"
 #include <gz/usd/config.hh>
@@ -52,6 +54,21 @@ namespace gz
         const sdf::Material *_materialSdf,
         pxr::UsdStageRefPtr &_stage,
         pxr::SdfPath &_materialPath);
+
+    /// \brief Set the directory that contains the output USD file. Textures
+    /// are copied to <dir>/materials/textures while the asset paths written
+    /// in the stage stay relative to the stage.
+    /// \param[in] _dir Output directory. Empty means the current directory.
+    void GZ_USD_VISIBLE SetTextureOutputDir(const std::string &_dir);
+
+    /// \brief Get the directory set with SetTextureOutputDir.
+    /// \return The output directory
+    const std::string GZ_USD_VISIBLE &TextureOutputDir();
+
+    /// \brief Get the location where a texture file should be written.
+    /// \param[in] _name File name with extension
+    /// \return <output dir>/materials/textures/<_name>
+    std::string GZ_USD_VISIBLE TextureFilePath(const std::string &_name);
   }
   }
 }

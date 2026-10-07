@@ -38,6 +38,7 @@
 #include "gz/usd/sdf_parser/World.hh"
 #include "../sdf_parser/Model.hh"
 #include "../UsdUtils.hh"
+#include "../sdf_parser/Material.hh"
 
 //////////////////////////////////////////////////
 /// \brief Enumeration of available commands
@@ -275,6 +276,7 @@ void RegisterResourcePaths(const std::string &_modelPaths)
 void runCommand(const Options &_opt)
 {
   RegisterResourcePaths(_opt.modelPaths);
+  gz::usd::SetTextureOutputDir(gz::common::parentPath(_opt.outputFilename));
 
   // Configure SDF to fetch assets from Gazebo fuel.
   sdf::setFindCallback(std::bind(&FindResources, std::placeholders::_1));

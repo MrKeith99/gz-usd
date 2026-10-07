@@ -19,7 +19,12 @@
 
 #include <string>
 
+#include <cctype>
+
 #include <gz/common/Console.hh>
+#include <gz/common/Filesystem.hh>
+#include <gz/common/Image.hh>
+#include <gz/common/Material.hh>
 #include <gz/common/Mesh.hh>
 #include <gz/common/MeshManager.hh>
 #include <gz/common/Util.hh>
@@ -60,6 +65,7 @@
 #include "sdf/Ellipsoid.hh"
 #include "sdf/Geometry.hh"
 #include "sdf/Mesh.hh"
+#include "sdf/Pbr.hh"
 #include "sdf/Plane.hh"
 #include "sdf/Sphere.hh"
 
@@ -74,6 +80,68 @@ inline namespace GZ_USD_VERSION_NAMESPACE {
 //
 namespace usd
 {
+  //////////////////////////////////////////////////
+  /// \brief Write the image embedded in a mesh material (e.g., a texture
+  /// inside a GLB) to the output textures folder.
+  /// \param[in] _material Mesh material
+  /// \param[in] _meshFile File the mesh was loaded from
+  /// \param[in] _materialIndex Index of _material in the mesh
+  /// \return The path of the written image. Empty if the material has no
+  /// embedded image or it could not be written.
+  std::string SaveEmbeddedTexture(const gz::common::Material &_material,
+      const std::string &_meshFile, int _materialIndex)
+  {
+    const auto data = _material.TextureData();
+    if (!data)
+      return "";
+
+    std::string name = gz::common::basename(_meshFile);
+    name = name.substr(0, name.rfind('.'));
+    for (auto &c : name)
+    {
+      if (!std::isalnum(static_cast<unsigned char>(c)))
+        c = '_';
+    }
+    name += "_" + std::to_string(_materialIndex) + ".png";
+
+    const std::string file = TextureFilePath(name);
+    gz::common::createDirectories(gz::common::parentPath(file));
+
+    gz::common::Image image;
+    image.SetFromData(data->Data().data(), data->Width(), data->Height(),
+        data->PixelFormat());
+    image.SavePNG(file);
+    return file;
+  }
+
+  //////////////////////////////////////////////////
+  /// \brief Point the albedo map of a material to a file
+  /// \param[in,out] _material Material to modify
+  /// \param[in] _file Albedo map
+  void SetAlbedoMap(sdf::Material &_material, const std::string &_file)
+  {
+    sdf::Pbr pbr;
+    if (_material.PbrMaterial())
+      pbr = *_material.PbrMaterial();
+
+    auto type = sdf::PbrWorkflowType::METAL;
+    sdf::PbrWorkflow workflow;
+    if (const auto *metal = pbr.Workflow(sdf::PbrWorkflowType::METAL))
+    {
+      workflow = *metal;
+    }
+    else if (const auto *specular =
+        pbr.Workflow(sdf::PbrWorkflowType::SPECULAR))
+    {
+      workflow = *specular;
+      type = sdf::PbrWorkflowType::SPECULAR;
+    }
+    workflow.SetType(type);
+    workflow.SetAlbedoMap(_file);
+    pbr.SetWorkflow(type, workflow);
+    _material.SetPbrMaterial(pbr);
+  }
+
   /// \brief Parse a SDF box geometry into a USD box geometry
   /// \param[in] _geometry The SDF box geometry
   /// \param[in] _stage The stage that will contain the parsed USD equivalent
@@ -472,7 +540,11 @@ namespace usd
       if (materialIndex != -1)
       {
         const auto material = ignMesh->MaterialByIndex(materialIndex).get();
-        const sdf::Material materialSdf = gz::usd::convert(material);
+        sdf::Material materialSdf = gz::usd::convert(material);
+        const auto embeddedTexture =
+          SaveEmbeddedTexture(*material, fullName, materialIndex);
+        if (!embeddedTexture.empty())
+          SetAlbedoMap(materialSdf, embeddedTexture);
         pxr::SdfPath materialPath;
         gz::usd::UsdErrors materialErrors = ParseSdfMaterial(
           &materialSdf, _stage, materialPath);

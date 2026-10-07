@@ -48,36 +48,74 @@ inline namespace GZ_USD_VERSION_NAMESPACE {
 //
 namespace usd
 {
-  /// \brief Copy a file in a directory
-  /// \param[in] _path path where the copy will be located
-  /// \param[in] _fullPath name of the file to copy
-  /// \return True if the file at _fullPath was copied to _path. False otherwise
-  bool copyMaterial(const std::string &_path, const std::string &_fullPath)
+  //////////////////////////////////////////////////
+  /// \brief Directory that contains the USD stage being written
+  static std::string &TextureOutputDirRef()
   {
-    if (!_path.empty() && !_fullPath.empty())
-    {
-      auto fileName = gz::common::basename(_path);
-      auto filePathIndex = _path.rfind(fileName);
-      auto filePath = _path.substr(0, filePathIndex);
-      if (!filePath.empty())
-      {
-        gz::common::createDirectories(filePath);
-      }
-      return gz::common::copyFile(_fullPath, _path);
-    }
-    return false;
+    static std::string dir;
+    return dir;
   }
 
-  /// \brief Get the path to copy the material to
-  /// \param[in] _uri full path of the file to copy
-  /// \return A relative path to save the material. The path looks like:
-  /// materials/textures/<filename with extension>
-  std::string getMaterialCopyPath(const std::string &_uri)
+  //////////////////////////////////////////////////
+  void SetTextureOutputDir(const std::string &_dir)
+  {
+    TextureOutputDirRef() = _dir;
+  }
+
+  //////////////////////////////////////////////////
+  const std::string &TextureOutputDir()
+  {
+    return TextureOutputDirRef();
+  }
+
+  //////////////////////////////////////////////////
+  std::string TextureFilePath(const std::string &_name)
   {
     return gz::common::joinPaths(
-      "materials",
-      "textures",
-      gz::common::basename(_uri));
+      TextureOutputDir(), "materials", "textures", _name);
+  }
+
+  //////////////////////////////////////////////////
+  /// \brief Copy a file to a destination, creating the directories
+  /// \param[in] _path destination of the copy
+  /// \param[in] _fullPath name of the file to copy
+  /// \return True if the file at _fullPath is at _path. False otherwise
+  bool copyMaterial(const std::string &_path, const std::string &_fullPath)
+  {
+    if (_path.empty() || _fullPath.empty())
+      return false;
+    if (_path == _fullPath)
+      return true;
+
+    const auto filePath = gz::common::parentPath(_path);
+    if (!filePath.empty())
+      gz::common::createDirectories(filePath);
+    return gz::common::copyFile(_fullPath, _path);
+  }
+
+  //////////////////////////////////////////////////
+  /// \brief Copy a texture next to the output stage
+  /// \param[in] _material Material that owns the texture
+  /// \param[in] _texture Texture path or URI as written in the SDF
+  /// \return The texture path relative to the stage:
+  /// materials/textures/<filename with extension>
+  std::string CopyTexture(const sdf::Material &_material,
+      const std::string &_texture)
+  {
+    std::string fullName = gz::common::findFile(_texture);
+    if (fullName.empty())
+      fullName = gz::common::findFile(gz::common::basename(_texture));
+    if (fullName.empty() && !_material.FilePath().empty())
+    {
+      fullName = gz::common::joinPaths(
+        gz::common::parentPath(_material.FilePath()), _texture);
+    }
+    if (fullName.empty() || !gz::common::exists(fullName))
+      fullName = _texture;
+
+    const auto name = gz::common::basename(_texture);
+    copyMaterial(TextureFilePath(name), fullName);
+    return gz::common::joinPaths("materials", "textures", name);
   }
 
   /// \brief Fill Material shader attributes and properties
@@ -395,18 +433,8 @@ namespace usd
 
         if (!pbrWorkflow->AlbedoMap().empty())
         {
-          std::string copyPath = getMaterialCopyPath(pbrWorkflow->AlbedoMap());
-
-          std::string fullnameAlbedoMap =
-            gz::common::findFile(
-              gz::common::basename(pbrWorkflow->AlbedoMap()));
-
-          if (fullnameAlbedoMap.empty())
-          {
-            fullnameAlbedoMap = pbrWorkflow->AlbedoMap();
-          }
-
-          copyMaterial(copyPath, fullnameAlbedoMap);
+          const std::string copyPath =
+            CopyTexture(*_materialSdf, pbrWorkflow->AlbedoMap());
 
           auto errorsMaterialDiffuseTexture =
             CreateMaterialInput<pxr::SdfAssetPath>(
@@ -433,19 +461,8 @@ namespace usd
         }
         if (!pbrWorkflow->MetalnessMap().empty())
         {
-          std::string copyPath =
-            getMaterialCopyPath(pbrWorkflow->MetalnessMap());
-
-          std::string fullnameMetallnessMap =
-            gz::common::findFile(
-              gz::common::basename(pbrWorkflow->MetalnessMap()));
-
-          if (fullnameMetallnessMap.empty())
-          {
-            fullnameMetallnessMap = pbrWorkflow->MetalnessMap();
-          }
-
-          copyMaterial(copyPath, fullnameMetallnessMap);
+          const std::string copyPath =
+            CopyTexture(*_materialSdf, pbrWorkflow->MetalnessMap());
 
           auto errorsMaterialMetallicTexture =
             CreateMaterialInput<pxr::SdfAssetPath>(
@@ -472,18 +489,8 @@ namespace usd
         }
         if (!pbrWorkflow->NormalMap().empty())
         {
-          std::string copyPath = getMaterialCopyPath(pbrWorkflow->NormalMap());
-
-          std::string fullnameNormalMap =
-            gz::common::findFile(
-              gz::common::basename(pbrWorkflow->NormalMap()));
-
-          if (fullnameNormalMap.empty())
-          {
-            fullnameNormalMap = pbrWorkflow->NormalMap();
-          }
-
-          copyMaterial(copyPath, fullnameNormalMap);
+          const std::string copyPath =
+            CopyTexture(*_materialSdf, pbrWorkflow->NormalMap());
 
           auto errorsMaterialNormalMapTexture =
             CreateMaterialInput<pxr::SdfAssetPath>(
@@ -510,19 +517,8 @@ namespace usd
         }
         if (!pbrWorkflow->RoughnessMap().empty())
         {
-          std::string copyPath =
-            getMaterialCopyPath(pbrWorkflow->RoughnessMap());
-
-          std::string fullnameRoughnessMap =
-            gz::common::findFile(
-              gz::common::basename(pbrWorkflow->RoughnessMap()));
-
-          if (fullnameRoughnessMap.empty())
-          {
-            fullnameRoughnessMap = pbrWorkflow->RoughnessMap();
-          }
-
-          copyMaterial(copyPath, fullnameRoughnessMap);
+          const std::string copyPath =
+            CopyTexture(*_materialSdf, pbrWorkflow->RoughnessMap());
 
           auto errorsMaterialReflectionRoughnessTexture =
             CreateMaterialInput<pxr::SdfAssetPath>(
