@@ -127,12 +127,15 @@ TEST(UsdUtils, validPath)
   EXPECT_EQ("_0/start/with/digit",
             gz::usd::validPath("0/start/with/digit"));
 
-  EXPECT_EQ("/hasSpaces", gz::usd::validPath("/has Spaces"));
+  EXPECT_EQ("/has_Spaces", gz::usd::validPath("/has Spaces"));
+
+  EXPECT_EQ("/living_room_long_table",
+            gz::usd::validPath("/living_room#long_table"));
 
   EXPECT_EQ("/has_period", gz::usd::validPath("/has.period"));
 
   EXPECT_EQ("/has_dash", gz::usd::validPath("/has-dash"));
 
-  EXPECT_EQ("_5/has_period/hasSpace/has_dash",
+  EXPECT_EQ("_5/has_period/has_Space/has_dash",
       gz::usd::validPath("5/has.period/has Space/has-dash"));
 }

@@ -97,3 +97,28 @@ TEST_F(UsdStageFixture, World)
   EXPECT_TRUE(physicsScene.GetGravityMagnitudeAttr().Get(&gravityMagnitudeVal));
   EXPECT_FLOAT_EQ(gravityMagnitudeVal, 9.8f);
 }
+
+/////////////////////////////////////////////////
+TEST_F(UsdStageFixture, NamesWithInvalidCharacters)
+{
+  const auto path = gz::testing::TestFile("sdf", "hash_name.sdf");
+  sdf::Root root;
+  ASSERT_TRUE(gz::testing::LoadSdfFile(path, root));
+  auto world = root.WorldByIndex(0u);
+
+  auto usdErrors = gz::usd::ParseSdfWorld(*world, stage, "/hash_world");
+  EXPECT_TRUE(usdErrors.empty());
+
+  const auto model = this->stage->GetPrimAtPath(
+    pxr::SdfPath("/hash_world/living_room_long_table"));
+  ASSERT_TRUE(model);
+  const auto value = model.GetCustomDataByKey(pxr::TfToken("sdf:name"));
+  ASSERT_TRUE(value.IsHolding<std::string>());
+  EXPECT_EQ("living_room#long_table", value.Get<std::string>());
+
+  const auto link = this->stage->GetPrimAtPath(
+    pxr::SdfPath("/hash_world/living_room_long_table/top_link"));
+  ASSERT_TRUE(link);
+  EXPECT_TRUE(this->stage->GetPrimAtPath(pxr::SdfPath(
+    "/hash_world/living_room_long_table/top_link/col_1")));
+}

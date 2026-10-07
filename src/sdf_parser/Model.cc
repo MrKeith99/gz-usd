@@ -62,8 +62,10 @@ namespace usd
       return errors;
     }
 
-    const pxr::SdfPath sdfModelPath(_path);
+    const pxr::SdfPath sdfModelPath(gz::usd::validPath(_path));
     auto usdModelXform = pxr::UsdGeomXform::Define(_stage, sdfModelPath);
+    usdModelXform.GetPrim().SetCustomDataByKey(
+      pxr::TfToken("sdf:name"), pxr::VtValue(_model.Name()));
     // since USD does not have a plane yet, planes are being represented as a
     // wide, thin box. The plane/box pose needs to be offset according to the
     // plane thickness to ensure that the top of the plane is at the correct
@@ -151,7 +153,8 @@ namespace usd
     for (uint64_t i = 0; i < _model.JointCount(); ++i)
     {
       const auto joint = *(_model.JointByIndex(i));
-      const auto jointPath = std::string(_path + "/" + joint.Name());
+      const auto jointPath =
+        gz::usd::validPath(std::string(_path + "/" + joint.Name()));
       const auto jointErrors = ParseSdfJoint(joint, _stage, jointPath, _model,
             sdfLinkToUSDPath, _worldPath);
       if (!jointErrors.empty())

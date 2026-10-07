@@ -54,10 +54,12 @@ namespace usd
     const std::string &_path,
     bool _rigidBody)
   {
-    const pxr::SdfPath sdfLinkPath(_path);
+    const pxr::SdfPath sdfLinkPath(gz::usd::validPath(_path));
     gz::usd::UsdErrors errors;
 
     auto usdLinkXform = pxr::UsdGeomXform::Define(_stage, sdfLinkPath);
+    usdLinkXform.GetPrim().SetCustomDataByKey(
+      pxr::TfToken("sdf:name"), pxr::VtValue(_link.Name()));
 
     math::Pose3d pose;
     auto poseErrors = gz::usd::PoseWrtParent(_link, pose);

@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="hash_world">
+    <model name="living_room#long_table">
+      <static>true</static>
+      <link name="top link">
+        <collision name="col.1">
+          <geometry><box><size>1 1 1</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+  </world>
+</sdf>

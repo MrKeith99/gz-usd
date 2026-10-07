@@ -18,6 +18,7 @@
 #ifndef GZ_USD_UTILS_HH_
 #define GZ_USD_UTILS_HH_
 
+#include <cctype>
 #include <string>
 
 #include <gz/math/Angle.hh>
@@ -57,26 +58,29 @@ namespace gz
   namespace usd
   {
     /// \brief Return a valid USD path
-    /// Path must not:
-    ///   - start with a digit
-    ///   - Contain spaces
-    ///   - Contain dots
-    ///   - Contain dashes
+    /// Every path component must only contain [A-Za-z0-9_] and must not
+    /// start with a digit. Any other character (spaces, dots, dashes, '#',
+    /// ...) is replaced by '_'. The '/' separators are kept.
     /// \param[in] _path Path to check
     /// \return A valid path
     inline std::string validPath(const std::string &_path)
     {
       std::string result;
-      if (_path.empty())
+      bool componentStart = true;
+      for (const char c : _path)
       {
-        return result;
-      }
-      result = gz::common::replaceAll(_path, " ", "");
-      result = gz::common::replaceAll(result, ".", "_");
-      result = gz::common::replaceAll(result, "-", "_");
-      if (std::isdigit(result[0]))
-      {
-        result = "_" + result;
+        if (c == '/')
+        {
+          result += c;
+          componentStart = true;
+          continue;
+        }
+        const bool alnum = std::isalnum(static_cast<unsigned char>(c)) &&
+          static_cast<unsigned char>(c) < 128;
+        if (componentStart && std::isdigit(static_cast<unsigned char>(c)))
+          result += '_';
+        result += (alnum || c == '_') ? c : '_';
+        componentStart = false;
       }
       return result;
     }
